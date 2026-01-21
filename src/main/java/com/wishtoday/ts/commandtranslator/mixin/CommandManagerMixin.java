@@ -1,10 +1,15 @@
 package com.wishtoday.ts.commandtranslator.mixin;
 
 import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.ParsedArgument;
-import com.wishtoday.ts.commandtranslator.Reader.ArgumentReader;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.wishtoday.ts.commandtranslator.Commandtranslator;
+import com.wishtoday.ts.commandtranslator.Reader.CommandParser;
+import com.wishtoday.ts.commandtranslator.Reader.SelectorCommandParser;
 import com.wishtoday.ts.commandtranslator.Services.TextProvider;
 import com.wishtoday.ts.commandtranslator.Util.CommandFixUtils;
+import net.minecraft.command.argument.MessageArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
@@ -20,6 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Mixin(CommandManager.class)
 public class CommandManagerMixin {
@@ -45,8 +51,6 @@ public class CommandManagerMixin {
         }
         String nodeName = provider.getNodeName();
         ParsedArgument<ServerCommandSource, ?> node2 = getServerCommandSourceParsedArgument(provider, "HelloWorld");
-        //ParsedArgumentMethod mixin = (ParsedArgumentMethod) node;
-        //mixin.setResult(Text.of("HelloWorld"));
         parseResults.getContext().withArgument(nodeName, node2);
     }
 
@@ -58,16 +62,26 @@ public class CommandManagerMixin {
         if (!provider.isMessageFormat()) {
             node2 = new ParsedArgument<>(node.getRange().getStart(), node.getRange().getEnd(), Text.of(newString));
         } else {
-            String contents = provider.getMessageFormatInfo().format().contents();
-            ArgumentReader reader = new ArgumentReader(contents);
-            ArgumentReader.SelectorStringInfo info = reader.readSelector();
-            if (info != null) {
-                System.out.println(info.selectorString());
-                String sb = contents.substring(0, info.start()) +
-                        contents.substring(info.end());
-                System.out.println(sb);
+            MessageArgumentType.MessageFormat format = provider.getMessageFormatInfo().format();
+            String contents = format.contents();
+            CommandParser<SelectorCommandParser.ParsedResult> parser = SelectorCommandParser.of(contents);
+            SelectorCommandParser.ParsedResult parse = parser.parse();
+            //parse.forEach(readElement -> System.out.println(readElement.toString()));
+            SelectorCommandParser.ParsedResult result = parse.changeAllText(string -> newString);
+            MessageArgumentType.MessageFormat format1 = null;
+            String s = result.toString();
+            System.out.println(s);
+            try {
+                format1 = MessageArgumentType.MessageFormat.parse(new StringReader(s), true);
+            } catch (CommandSyntaxException e) {
+                Commandtranslator.LOGGER.error(e.getMessage());
             }
-            node2 = new ParsedArgument<>(node.getRange().getStart(), node.getRange().getEnd(), CommandFixUtils.fixMessageFormat(provider.getMessageFormatInfo().format(), newString));
+            if (format1 == null) {
+                node2 = node;
+            } else {
+                node2 = new ParsedArgument<>(node.getRange().getStart(), node.getRange().getEnd(), format1);
+            }
+            //node2 = new ParsedArgument<>(node.getRange().getStart(), node.getRange().getEnd(), CommandFixUtils.fixMessageFormat(provider.getMessageFormatInfo().format(), newString));
         }
         return node2;
     }
