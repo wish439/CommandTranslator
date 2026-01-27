@@ -1,5 +1,6 @@
 package com.wishtoday.ts.commandtranslator.Reader;
 
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -87,6 +88,7 @@ public final class SelectorCommandParser implements CommandParser<SelectorComman
 
     public static class ParsedResult {
         private final StringBuilder sb;
+        @Getter
         private final List<ReadElement> readElements;
         private String string;
         public ParsedResult(List<ReadElement> readElements) {
@@ -99,6 +101,7 @@ public final class SelectorCommandParser implements CommandParser<SelectorComman
         public Stream<ReadElement> stream() {
             return readElements.stream();
         }
+
         public ParsedResult changeAllText(Function<String, String> consumer) {
             List<ReadElement> newList = new ArrayList<>();
             for (ReadElement element : readElements) {

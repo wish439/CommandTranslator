@@ -24,7 +24,7 @@ public class OpenAITranslator extends AITranslator {
     public OpenAITranslator(String api, String key, String model) {
         super(api, key, model);
         this.messages = new ArrayList<>();
-        messages.add(new MessageInfo("system", "你是一个Minecraft使用的翻译机器人,请联系上下文更好的翻译为中文\n请根据以下规则翻译:\n1.只输出翻译结果，原因和思考过程不输出。\n2.不翻译Minecraft术语"));
+        messages.add(new MessageInfo("system", "你是一个Minecraft使用的翻译机器人,请联系上下文更好的翻译为中文\n请根据以下规则翻译:\n1.只输出翻译结果，原因和思考过程不输出。\n2.不翻译Minecraft术语。\n3.不翻译任何指令格式(如果有)"));
     }
 
     @Override
