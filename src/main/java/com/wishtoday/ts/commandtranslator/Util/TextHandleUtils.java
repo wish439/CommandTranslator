@@ -51,7 +51,7 @@ public class TextHandleUtils {
     }
 
     @NotNull
-    public static Text builderNewText(String newPlainText, Style style, List<Text> siblings) {
+    public static Text buildNewText(String newPlainText, Style style, List<Text> siblings) {
         Text newText = Text.of(newPlainText);
         MutableText mutableText = ((MutableText) newText).setStyle(style);
         siblings.forEach(mutableText::append);

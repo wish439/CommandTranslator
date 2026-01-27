@@ -83,7 +83,7 @@ public class CommandManagerMixin {
             String appliedPlain = o2nFunction.apply(plainString);
             List<Text> handled = handleAllStringInText(texts, o2nFunction);
 
-            node2 = new ParsedArgument<>(node.range().getStart(), node.range().getEnd(), builderNewText(appliedPlain, text.getStyle(), handled));
+            node2 = new ParsedArgument<>(node.range().getStart(), node.range().getEnd(), buildNewText(appliedPlain, text.getStyle(), handled));
             original.add(formatStringToReplaceFormat(plainString));
             original.addAll(getStringsFromTexts(texts).stream().map(this::formatStringToReplaceFormat).toList());
             translated.add(formatStringToReplaceFormat(appliedPlain));
