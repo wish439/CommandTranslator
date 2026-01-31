@@ -20,6 +20,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.38'
     modImplementation include("com.deepl.api:deepl-java:${project.deeplClient_version}")
     modImplementation include("com.squareup.okhttp3:okhttp:${project.okhttp_version}")
+    modImplementation include("org.xerial:sqlite-jdbc:${project.jdbc_sqlite_version}")
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"

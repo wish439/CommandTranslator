@@ -4,7 +4,6 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.ParsedArgument;
 import com.mojang.brigadier.context.StringRange;
-import lombok.AllArgsConstructor;
 import net.minecraft.server.command.ServerCommandSource;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,7 +52,7 @@ public class CommandNodeFinder {
         }
 
         @Override
-        public <A, B> EitherState<A,B> either(Class<A> aClass, Class<B> bClass) {
+        public <A, B> EitherState<A, B> either(Class<A> aClass, Class<B> bClass) {
             return new EitherArgument<>(aClass, bClass, context);
         }
     }
