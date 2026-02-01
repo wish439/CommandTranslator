@@ -4,7 +4,9 @@
   "package": "com.wishtoday.ts.commandtranslator.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "CommandDispatcherMixin",
     "CommandManagerMixin",
+    "LiteralArgumentBuilderMixin",
     "ServerCommandSourceAccessor"
   ],
   "client": [

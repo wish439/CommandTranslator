@@ -1,21 +1,19 @@
 package com.wishtoday.ts.commandtranslator.Data;
 
-import lombok.Getter;
+import lombok.experimental.Delegate;
 
 import java.util.List;
 
-@Getter
-public class TranslateResults {
-    private final List<String> original;
-    private final List<String> translated;
-    public TranslateResults(List<String> original, List<String> translated) {
-        this.original = original;
-        this.translated = translated;
+public class TranslateResults<T> {
+    @Delegate
+    private TranslateStringResults stringResults;
+    private T result;
+    public TranslateResults(T result, TranslateStringResults stringResults) {
+        this.result = result;
+        this.stringResults = stringResults;
     }
-    public String[] original() {
-        return original.toArray(new String[0]);
-    }
-    public String[] translated() {
-        return translated.toArray(new String[0]);
+    public TranslateResults(T result, List<String> original, List<String> translated) {
+        this.result = result;
+        this.stringResults = new TranslateStringResults(original, translated);
     }
 }

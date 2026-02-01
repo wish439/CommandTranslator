@@ -1,32 +1,49 @@
 package com.wishtoday.ts.commandtranslator.Manager;
 
+import com.mojang.brigadier.tree.CommandNode;
+import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import lombok.Getter;
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 public class TextCommandManager {
     @Getter
     private static final TextCommandManager INSTANCE = new TextCommandManager();
 
     private TextCommandManager() {
-        this.textNodeCommands = HashSet.newHashSet(5);
+        this.cacheTextNodeCommands = new HashMap<>();
+        this.textNodeCommands = new HashMap<>();
     }
-    private final Set<String> textNodeCommands;
+    private final HashMap<CommandNode<?>, TextNodeTranslatorStorage<?>> textNodeCommands;
+    private final HashMap<CommandNode<?>, TextNodeTranslatorStorage<?>> cacheTextNodeCommands;
 
-    public void addCommand(String command) {
-        if (command == null || command.isEmpty()) {
-            throw new IllegalArgumentException("Text commands can't be null or empty");
-        }
-        this.textNodeCommands.add(command);
-    }
-
-    public void forEach(Consumer<String> consumer) {
-        this.textNodeCommands.forEach(consumer);
+    public Set<Map.Entry<CommandNode<?>, TextNodeTranslatorStorage<?>>> cacheForEntry() {
+        return this.cacheTextNodeCommands.entrySet();
     }
 
-    public boolean containsCommand(String command) {
-        return this.textNodeCommands.contains(command);
+    public void cacheCommand(CommandNode<?> node, TextNodeTranslatorStorage<?> textNode) {
+        this.cacheTextNodeCommands.put(node, textNode);
+    }
+
+    public TextNodeTranslatorStorage<?> getCache(CommandNode<?> node) {
+        return this.cacheTextNodeCommands.get(node);
+    }
+
+    public boolean containsCache(CommandNode<?> node) {
+        return this.cacheTextNodeCommands.containsKey(node);
+    }
+
+    public void addCommand(CommandNode<?> node, TextNodeTranslatorStorage<?> value) {
+        this.textNodeCommands.put(node, value);
+    }
+
+    public boolean containsCommand(CommandNode<?> node) {
+        return this.textNodeCommands.containsKey(node);
+    }
+
+    public TextNodeTranslatorStorage<?> getCommand(CommandNode<?> node) {
+        return this.textNodeCommands.get(node);
     }
 }

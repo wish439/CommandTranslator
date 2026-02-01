@@ -9,7 +9,7 @@ import com.mojang.brigadier.context.ParsedArgument;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
-import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
+import com.wishtoday.ts.commandtranslator.Data.TranslateStringResults;
 import com.wishtoday.ts.commandtranslator.Reader.CommandParser;
 import com.wishtoday.ts.commandtranslator.Reader.SelectorCommandParser;
 import net.minecraft.command.argument.MessageArgumentType;
@@ -47,6 +47,8 @@ public class TextCommandProcessor {
 
         if (!node.hasPresent()) return;
 
+
+
         String nodeName;
         StringRange stringRange;
 
@@ -67,7 +69,7 @@ public class TextCommandProcessor {
     }
 
     @Nullable
-    public TranslateResults replaceTheContextNodeAndGetTranslateResult() {
+    public TranslateStringResults replaceTheContextNodeAndGetTranslateResult() {
         CommandNodeFinder.StartState<Text, MessageArgumentType.MessageFormat> node = this.findTextNode(this.context);
 
         if (!node.hasPresent()) return null;
@@ -76,14 +78,14 @@ public class TextCommandProcessor {
         if (node.leftPresent()) nodeName = node.getLeft().nodeName();
         else nodeName = node.getRight().nodeName();
         if (nodeName == null || nodeName.isEmpty()) return null;
-        Pair<ParsedArgument<ServerCommandSource, ?>, TranslateResults> results = this.getParsedArgumentAndTranslateResults(node);
+        Pair<ParsedArgument<ServerCommandSource, ?>, TranslateStringResults> results = this.getParsedArgumentAndTranslateResults(node);
         this.context = this.changeToDeepest(this.context);
         this.context.withArgument(nodeName, results.getLeft());
 
         return results.getRight();
     }
 
-    private Pair<ParsedArgument<ServerCommandSource, ?>, TranslateResults> getParsedArgumentAndTranslateResults(CommandNodeFinder.StartState<Text, MessageArgumentType.MessageFormat> node) {
+    private Pair<ParsedArgument<ServerCommandSource, ?>, TranslateStringResults> getParsedArgumentAndTranslateResults(CommandNodeFinder.StartState<Text, MessageArgumentType.MessageFormat> node) {
         List<String> original = new ArrayList<>();
         List<String> translated = new ArrayList<>();
         ParsedArgument<ServerCommandSource, ?> node2;
@@ -94,7 +96,7 @@ public class TextCommandProcessor {
             this.range = node.getRight().range();
             node2 = this.handleMessageFormat(node.getRight().result(), original, translated);
         }
-        return new Pair<>(node2, new TranslateResults(original, translated));
+        return new Pair<>(node2, new TranslateStringResults(original, translated));
     }
 
     private CommandNodeFinder
