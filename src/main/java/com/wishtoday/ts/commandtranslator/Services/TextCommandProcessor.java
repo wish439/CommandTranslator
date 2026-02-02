@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static com.wishtoday.ts.commandtranslator.Util.TextHandleUtils.*;
+import static com.wishtoday.ts.commandtranslator.Util.CommandParseUtils.*;
 import static com.wishtoday.ts.commandtranslator.Util.TextHandleUtils.getStringsFromTexts;
 
 public class TextCommandProcessor {
@@ -63,7 +64,7 @@ public class TextCommandProcessor {
             text = node.getRight().result();
         }
 
-        this.changeToDeepest(this.context);
+        changeToDeepest(this.context);
 
         this.context.withArgument(nodeName, new ParsedArgument<>(stringRange.getStart(), stringRange.getEnd(), text));
     }
@@ -79,7 +80,7 @@ public class TextCommandProcessor {
         else nodeName = node.getRight().nodeName();
         if (nodeName == null || nodeName.isEmpty()) return null;
         Pair<ParsedArgument<ServerCommandSource, ?>, TranslateStringResults> results = this.getParsedArgumentAndTranslateResults(node);
-        this.context = this.changeToDeepest(this.context);
+        changeToDeepest(this.context);
         this.context.withArgument(nodeName, results.getLeft());
 
         return results.getRight();
@@ -152,13 +153,6 @@ public class TextCommandProcessor {
             node2 = new ParsedArgument<>(range.getStart(), range.getEnd(), format1);
         }
         return node2;
-    }
-
-    private CommandContextBuilder<ServerCommandSource> changeToDeepest(CommandContextBuilder<ServerCommandSource> context) {
-        while (context.getChild() != null) {
-            context = context.getChild();
-        }
-        return context;
     }
 
     @NotNull

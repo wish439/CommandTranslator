@@ -16,34 +16,46 @@ public class TextCommandManager {
         this.cacheTextNodeCommands = new HashMap<>();
         this.textNodeCommands = new HashMap<>();
     }
-    private final HashMap<CommandNode<?>, TextNodeTranslatorStorage<?>> textNodeCommands;
-    private final HashMap<CommandNode<?>, TextNodeTranslatorStorage<?>> cacheTextNodeCommands;
+    private final HashMap<String, TextNodeTranslatorStorage<?>> textNodeCommands;
+    private final HashMap<String, TextNodeTranslatorStorage<?>> cacheTextNodeCommands;
 
-    public Set<Map.Entry<CommandNode<?>, TextNodeTranslatorStorage<?>>> cacheForEntry() {
+    public Set<Map.Entry<String, TextNodeTranslatorStorage<?>>> cacheForEntry() {
         return this.cacheTextNodeCommands.entrySet();
     }
 
-    public void cacheCommand(CommandNode<?> node, TextNodeTranslatorStorage<?> textNode) {
+    public void cacheCommand(String node, TextNodeTranslatorStorage<?> textNode) {
         this.cacheTextNodeCommands.put(node, textNode);
     }
 
-    public TextNodeTranslatorStorage<?> getCache(CommandNode<?> node) {
+    public void deletedCache(String node) {
+        this.cacheTextNodeCommands.remove(node);
+    }
+
+    public void clearCache() {
+        this.cacheTextNodeCommands.clear();
+    }
+
+    public TextNodeTranslatorStorage<?> getCache(String node) {
         return this.cacheTextNodeCommands.get(node);
     }
 
-    public boolean containsCache(CommandNode<?> node) {
+    public boolean containsCache(String node) {
         return this.cacheTextNodeCommands.containsKey(node);
     }
 
-    public void addCommand(CommandNode<?> node, TextNodeTranslatorStorage<?> value) {
+    public void addCommand(String node, TextNodeTranslatorStorage<?> value) {
         this.textNodeCommands.put(node, value);
     }
 
-    public boolean containsCommand(CommandNode<?> node) {
+    public Set<Map.Entry<String, TextNodeTranslatorStorage<?>>> getTextNodeCommands() {
+        return this.textNodeCommands.entrySet();
+    }
+
+    public boolean containsCommand(String node) {
         return this.textNodeCommands.containsKey(node);
     }
 
-    public TextNodeTranslatorStorage<?> getCommand(CommandNode<?> node) {
+    public TextNodeTranslatorStorage<?> getCommand(String node) {
         return this.textNodeCommands.get(node);
     }
 }
