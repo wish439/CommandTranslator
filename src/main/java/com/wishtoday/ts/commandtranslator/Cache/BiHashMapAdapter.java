@@ -5,11 +5,11 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.Map;
 
-public class BiHashMapAdapter<K, V> implements JsonSerializer<BiHashMap<K, V>>,
-        JsonDeserializer<BiHashMap<K, V>> {
+public class BiHashMapAdapter<K, V> implements JsonSerializer<ConcurrentBiHashMap<K, V>>,
+        JsonDeserializer<ConcurrentBiHashMap<K, V>> {
 
     @Override
-    public JsonElement serialize(BiHashMap<K, V> src, Type typeOfSrc,
+    public JsonElement serialize(ConcurrentBiHashMap<K, V> src, Type typeOfSrc,
                                  JsonSerializationContext context) {
         JsonObject jsonObject = new JsonObject();
         jsonObject.add("map", context.serialize(src.getK2v()));
@@ -17,9 +17,9 @@ public class BiHashMapAdapter<K, V> implements JsonSerializer<BiHashMap<K, V>>,
     }
 
     @Override
-    public BiHashMap<K, V> deserialize(JsonElement json, Type typeOfT,
+    public ConcurrentBiHashMap<K, V> deserialize(JsonElement json, Type typeOfT,
                                        JsonDeserializationContext context) throws JsonParseException {
-        BiHashMap<K, V> result = new BiHashMap<>();
+        ConcurrentBiHashMap<K, V> result = new ConcurrentBiHashMap<>();
 
         JsonObject jsonObject = json.getAsJsonObject();
         Map<K, V> map = context.deserialize(jsonObject.get("map"),
