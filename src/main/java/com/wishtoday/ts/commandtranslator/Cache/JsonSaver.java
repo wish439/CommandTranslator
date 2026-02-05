@@ -18,12 +18,12 @@ public class JsonSaver implements DataSaver {
     private Gson gson;
 
     public JsonSaver() {
-        path = PathUtil.getServerConfigPath().resolve("CommandTranslator").resolve("cache.json");
+        path = PathUtil.getServerConfigPath().resolve("ArgumentTranslator").resolve("cache.json");
         if (Files.notExists(path)) {
             this.createCache();
         }
         this.gson = new GsonBuilder()
-                .registerTypeAdapter(BiHashMap.class, new BiHashMapAdapter<>())
+                .registerTypeAdapter(ConcurrentBiHashMap.class, new BiHashMapAdapter<>())
                 .setPrettyPrinting()
                 .create();
     }
@@ -43,7 +43,7 @@ public class JsonSaver implements DataSaver {
     @Override
     public void save(CacheInstance data) {
         this.createCache();
-        try(FileWriter writer = new FileWriter(this.path.toFile())) {
+        try (FileWriter writer = new FileWriter(this.path.toFile())) {
             this.gson.toJson(data, writer);
         } catch (IOException e) {
             Commandtranslator.LOGGER.error(e.getMessage());
@@ -57,7 +57,7 @@ public class JsonSaver implements DataSaver {
     public CacheInstance load() {
         this.createCache();
         CacheInstance instance = null;
-        try(FileReader reader = new FileReader(this.path.toFile())) {
+        try (FileReader reader = new FileReader(this.path.toFile())) {
             instance = this.gson.fromJson(reader, CacheInstance.class);
         } catch (IOException e) {
             Commandtranslator.LOGGER.error(e.getMessage());

@@ -4,21 +4,22 @@ import com.google.gson.annotations.SerializedName;
 import lombok.Getter;
 
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class BiHashMap<K,V> {
+public class ConcurrentBiHashMap<K,V> {
     @SerializedName("map")
     @Getter
-    private HashMap<K, V> k2v;
-    private transient HashMap<V, K> v2k;
+    private ConcurrentHashMap<K, V> k2v;
+    private transient ConcurrentHashMap<V, K> v2k;
 
-    public BiHashMap() {
-        k2v = new HashMap<>();
-        v2k = new HashMap<>();
+    public ConcurrentBiHashMap() {
+        k2v = new ConcurrentHashMap<>();
+        v2k = new ConcurrentHashMap<>();
     }
 
     public void rebuildReverseMap() {
         if (v2k == null) {
-            v2k = new HashMap<>();
+            v2k = new ConcurrentHashMap<>();
         }
         v2k.clear();
         for (HashMap.Entry<K, V> entry : k2v.entrySet()) {
@@ -40,7 +41,7 @@ public class BiHashMap<K,V> {
     public void put(K key, V value) {
         k2v.put(key, value);
         if (v2k == null) {
-            v2k = new HashMap<>();
+            v2k = new ConcurrentHashMap<>();
         }
         v2k.put(value, key);
     }

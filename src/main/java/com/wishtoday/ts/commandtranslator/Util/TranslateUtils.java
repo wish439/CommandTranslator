@@ -7,9 +7,9 @@ import org.apache.commons.compress.utils.Lists;
 
 public class TranslateUtils {
     public static TranslateResults<Text> translateText(Text text) {
-        return new TranslateResults<>(Text.of("HelloWorld"), Lists.newArrayList(), Lists.newArrayList());
+        return new TranslateResults<>(Text.of("HelloWorld"), Lists.newArrayList(), Lists.newArrayList(), null);
     }
     public static TranslateResults<MessageArgumentType.MessageFormat> translateMessageFormat(MessageArgumentType.MessageFormat format) {
-        return new TranslateResults<>(new MessageArgumentType.MessageFormat("HelloWorld", new MessageArgumentType.MessageSelector[0]), Lists.newArrayList(), Lists.newArrayList());
+        return new TranslateResults<>(new MessageArgumentType.MessageFormat("HelloWorld", new MessageArgumentType.MessageSelector[0]), Lists.newArrayList(), Lists.newArrayList(), null);
     }
 }

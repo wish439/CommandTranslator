@@ -108,7 +108,7 @@ public class TextCommandProcessor {
                 .start();
     }
 
-    private ParsedArgument<ServerCommandSource, Text> handleText(Text text
+    public ParsedArgument<ServerCommandSource, Text> handleText(Text text
             , List<String> original, List<String> translated) {
 
         ParsedArgument<ServerCommandSource, Text> node2;
@@ -126,7 +126,7 @@ public class TextCommandProcessor {
         return node2;
     }
 
-    private ParsedArgument<ServerCommandSource, MessageArgumentType.MessageFormat> handleMessageFormat(MessageArgumentType.MessageFormat format
+    public ParsedArgument<ServerCommandSource, MessageArgumentType.MessageFormat> handleMessageFormat(MessageArgumentType.MessageFormat format
             , List<String> original, List<String> translated) {
         ParsedArgument<ServerCommandSource, MessageArgumentType.MessageFormat> node2;
         String contents = format.contents();

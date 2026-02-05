@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.ParsedArgument;
+import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.tree.CommandNode;
 import com.wishtoday.ts.commandtranslator.Cache.CacheInstance;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
@@ -46,29 +47,40 @@ public class CommandManagerMixin {
 
         TextCommandManager manager = TextCommandManager.getINSTANCE();
         CommandNode<ServerCommandSource> headNode = context.getNodes().getFirst().getNode();
-        if (!manager.containsCommand(headNode.getName())) return;
-        TextNodeTranslatorStorage<?> storage = manager.getCommand(headNode.getName());
-        Object o = storage.get(context);
 
-        System.out.println(o == null);
-        System.out.println(o);
-        //TranslateResults<?> apply = storage.apply(context);
+        if (!manager.containsCommand(headNode.getName())) return;
+
+        TextNodeTranslatorStorage<?> storage = manager.getCommand(headNode.getName());
 
         CacheInstance instance = CacheInstance.getINSTANCE();
-
         String originalCommand = executor.getCommand();
 
-        TextCommandProcessor processor = new TextCommandProcessor(context, this.dispatcher, s -> "HelloWorld");
+        //TextCommandProcessor processor = new TextCommandProcessor(context, this.dispatcher, s -> "HelloWorld");
         if (instance.getAllCommando2t().containsKey(originalCommand)) {
             String value = instance.getAllCommando2t().getValue(originalCommand);
-            processor.replaceTranslatedContextNode(value);
+
+            //processor.replaceTranslatedContextNode(value);
+
+            ParseResults<ServerCommandSource> parse = this.dispatcher.parse(value, context.getSource());
+            CommandContextBuilder<ServerCommandSource> parseContext = parse.getContext();
+            CommandParseUtils.changeToDeepest(parseContext);
+
+            ParsedArgument<ServerCommandSource, ?> argument = parseContext.getArguments().get(storage.getArgumentName());
+
+            context.withArgument(storage.getArgumentName(), argument);
+
             executor.setCommand(value);
             return;
         }
+
         if (instance.getAllCommando2t().containsValue(originalCommand)) return;
-        TranslateStringResults right = processor.replaceTheContextNodeAndGetTranslateResult();
-        if (right == null) return;
-        String s = StringUtils.replaceEach(originalCommand, right.original(), right.translated());
+        //TranslateStringResults right = processor.replaceTheContextNodeAndGetTranslateResult();
+
+        TranslateResults<?> translated = storage.translate(context, o -> "HELLO WORLD!");
+        if (translated == null) return;
+        StringRange range = translated.getRange();
+        context.withArgument(storage.getArgumentName(), new ParsedArgument<>(range.getStart(), range.getEnd(), translated.getResult()));
+        String s = StringUtils.replaceEach(originalCommand, translated.original(), translated.translated());
 
         executor.setCommand(s);
 

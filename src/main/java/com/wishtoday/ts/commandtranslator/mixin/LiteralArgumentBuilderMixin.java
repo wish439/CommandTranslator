@@ -5,12 +5,15 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.wishtoday.ts.commandtranslator.CommandTranslator.MessageFormatArgumentTranslator;
+import com.wishtoday.ts.commandtranslator.CommandTranslator.TextArgumentTranslator;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
 import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
 import com.wishtoday.ts.commandtranslator.Util.TranslateUtils;
 import net.minecraft.command.argument.MessageArgumentType;
 import net.minecraft.command.argument.TextArgumentType;
+import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -37,10 +40,10 @@ public class LiteralArgumentBuilderMixin {
                 return;
             }
             if (argument.getType() instanceof TextArgumentType textNode) {
-                instance.cacheCommand(result.getLiteral(), new TextNodeTranslatorStorage<>(argument.getName(), textNode, TranslateUtils::translateText));
+                instance.cacheCommand(result.getLiteral(), new TextNodeTranslatorStorage<>(argument.getName(), TextArgumentTranslator.INSTANCE));
             }
             if (argument.getType() instanceof MessageArgumentType messageNode) {
-                instance.cacheCommand(result.getLiteral(), new TextNodeTranslatorStorage<>(argument.getName(), messageNode, TranslateUtils::translateMessageFormat));
+                instance.cacheCommand(result.getLiteral(), new TextNodeTranslatorStorage<>(argument.getName(), MessageFormatArgumentTranslator.INSTANCE));
             }
         }
     }

@@ -1,31 +1,27 @@
 package com.wishtoday.ts.commandtranslator.Data;
 
-import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.ParsedArgument;
+import com.wishtoday.ts.commandtranslator.CommandTranslator.ArgumentTranslator;
+import lombok.Getter;
 import net.minecraft.server.command.ServerCommandSource;
 
-import java.util.Map;
 import java.util.function.Function;
 
-public record TextNodeTranslatorStorage<T>(String argumentName, ArgumentType<T> argumentTypes,
-                                           Function<T, TranslateResults<T>> translateAction) {
+@Getter
+public final class TextNodeTranslatorStorage<T> {
 
-    /*public TextNodeTranslatorStorage(ArgumentType<T> argumentTypes
-            , Function<T, TranslateResults<T>> translateAction, String... arguments) {
-        this(String.join(".", arguments), argumentTypes, translateAction);
-    }*/
+    private final String argumentName;
+    private final ArgumentTranslator<T> translator;
 
-    @SuppressWarnings("unchecked")
-    public TranslateResults<T> apply(CommandContextBuilder<ServerCommandSource> context) {
-        ParsedArgument<ServerCommandSource, ?> argument = context.getArguments().get(argumentName);
-        return this.translateAction.apply((T) argument.getResult());
+    public TextNodeTranslatorStorage(String argumentName, ArgumentTranslator<T> translator) {
+        this.argumentName = argumentName;
+        this.translator = translator;
     }
 
     @SuppressWarnings("unchecked")
-    public T get(CommandContextBuilder<ServerCommandSource> context) {
-        Map<String, ParsedArgument<ServerCommandSource, ?>> arguments = context.getArguments();
-        ParsedArgument<ServerCommandSource, ?> argument = arguments.get(this.argumentName);
-        return (T) argument.getResult();
+    public TranslateResults<T> translate(CommandContextBuilder<ServerCommandSource> context, Function<String, String> o2nFunction) {
+        ParsedArgument<ServerCommandSource, ?> argument = context.getArguments().get(argumentName);
+        return this.translator.translate((T) argument.getResult(), argument.getRange(), o2nFunction);
     }
 }

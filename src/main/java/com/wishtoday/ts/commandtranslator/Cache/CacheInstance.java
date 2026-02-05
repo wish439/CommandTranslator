@@ -7,12 +7,12 @@ import lombok.Getter;
 public class CacheInstance {
     private static CacheInstance INSTANCE;
 
-    private BiHashMap<String, String> allCommando2t;
-    //private BiHashMap<String, String> textNodeo2t;
+    private ConcurrentBiHashMap<String, String> allCommando2t;
+    //private ConcurrentBiHashMap<String, String> textNodeo2t;
 
     public CacheInstance() {
-        this.allCommando2t = new BiHashMap<>();
-        //this.textNodeo2t = new BiHashMap<>();
+        this.allCommando2t = new ConcurrentBiHashMap<>();
+        //this.textNodeo2t = new ConcurrentBiHashMap<>();
     }
 
     public synchronized static CacheInstance getINSTANCE() {
