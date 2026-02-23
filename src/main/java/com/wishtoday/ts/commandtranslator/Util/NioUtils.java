@@ -1,5 +1,8 @@
 package com.wishtoday.ts.commandtranslator.Util;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -18,10 +21,24 @@ public class NioUtils {
         }
 
         try {
-
             Files.writeString(path, content, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             throw new UncheckedIOException("Failed createFileAndWrite", e);
+        }
+    }
+
+    public static void deleteDirectories(@NotNull Path path) {
+        File file = path.toFile();
+        deleteDirectories(file);
+    }
+
+    public static void deleteDirectories(@NotNull File file) {
+        if (file.isDirectory()) {
+            for (File f : file.listFiles()) {
+                deleteDirectories(f);
+            }
+        } else {
+            file.delete();
         }
     }
 }

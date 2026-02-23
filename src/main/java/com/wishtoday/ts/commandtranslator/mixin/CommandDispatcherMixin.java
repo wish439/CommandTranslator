@@ -16,7 +16,7 @@ public class CommandDispatcherMixin {
     @Inject(method = "register", at = @At(value = "INVOKE", target = "Lcom/mojang/brigadier/tree/RootCommandNode;addChild(Lcom/mojang/brigadier/tree/CommandNode;)V"))
     private <S> void register(LiteralArgumentBuilder<S> command
             , CallbackInfoReturnable<LiteralCommandNode<S>> cir
-            , @Local final LiteralCommandNode<S> build) {
+            , @Local(name = "build") final LiteralCommandNode<S> build) {
         TextCommandManager instance = TextCommandManager.getINSTANCE();
         String literal = build.getLiteral();
         if (!instance.containsCache(literal)) {

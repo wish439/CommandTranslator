@@ -1,6 +1,5 @@
 package com.wishtoday.ts.commandtranslator.Manager;
 
-import com.mojang.brigadier.tree.CommandNode;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import lombok.Getter;
 

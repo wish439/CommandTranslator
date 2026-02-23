@@ -18,6 +18,10 @@ public class Commandtranslator implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(Commandtranslator.class);
     public static DataSaver dataSaver;
 
+    public static String MOD_ID = "commandtranslator";
+
+    public static String DataPackName = "zzzzz___generate";
+
     @Override
     public void onInitialize() {
         dataSaver = new JsonSaver();

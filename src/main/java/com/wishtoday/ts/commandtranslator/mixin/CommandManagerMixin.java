@@ -11,6 +11,7 @@ import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
 import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
+import com.wishtoday.ts.commandtranslator.mixin.Accessor.ServerCommandSourceAccessor;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;

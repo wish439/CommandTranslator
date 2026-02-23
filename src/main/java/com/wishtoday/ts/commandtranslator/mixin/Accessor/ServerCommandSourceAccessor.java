@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.mixin;
+package com.wishtoday.ts.commandtranslator.mixin.Accessor;
 
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;

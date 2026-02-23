@@ -4,6 +4,7 @@ import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.ParsedArgument;
 import com.wishtoday.ts.commandtranslator.CommandTranslator.ArgumentTranslator;
 import lombok.Getter;
+import net.minecraft.server.command.AbstractServerCommandSource;
 import net.minecraft.server.command.ServerCommandSource;
 
 import java.util.function.Function;
@@ -20,8 +21,8 @@ public final class TextNodeTranslatorStorage<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public TranslateResults<T> translate(CommandContextBuilder<ServerCommandSource> context, Function<String, String> o2nFunction) {
-        ParsedArgument<ServerCommandSource, ?> argument = context.getArguments().get(argumentName);
+    public <S extends AbstractServerCommandSource<S>> TranslateResults<T> translate(CommandContextBuilder<S> context, Function<String, String> o2nFunction) {
+        ParsedArgument<S, ?> argument = context.getArguments().get(argumentName);
         if (argument == null) return null;
         return this.translator.translate((T) argument.getResult(), argument.getRange(), o2nFunction);
     }
