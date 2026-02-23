@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class CommandParseUtils {
-    public static void changeToDeepest(CommandContextBuilder<ServerCommandSource> context) {
+    public static <T> void changeToDeepest(CommandContextBuilder<T> context) {
         while (context.getChild() != null) {
             context = context.getChild();
         }

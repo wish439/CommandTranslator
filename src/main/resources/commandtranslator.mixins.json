@@ -5,7 +5,9 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "CommandDispatcherMixin",
+    "CommandFunctionMixin",
     "CommandManagerMixin",
+    "FunctionLoaderMixin",
     "LiteralArgumentBuilderMixin",
     "ServerCommandSourceAccessor"
   ],

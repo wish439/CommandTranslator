@@ -22,6 +22,7 @@ public final class TextNodeTranslatorStorage<T> {
     @SuppressWarnings("unchecked")
     public TranslateResults<T> translate(CommandContextBuilder<ServerCommandSource> context, Function<String, String> o2nFunction) {
         ParsedArgument<ServerCommandSource, ?> argument = context.getArguments().get(argumentName);
+        if (argument == null) return null;
         return this.translator.translate((T) argument.getResult(), argument.getRange(), o2nFunction);
     }
 }

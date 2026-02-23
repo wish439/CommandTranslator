@@ -9,14 +9,11 @@ import com.mojang.brigadier.tree.CommandNode;
 import com.wishtoday.ts.commandtranslator.Cache.CacheInstance;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
-import com.wishtoday.ts.commandtranslator.Data.TranslateStringResults;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
-import com.wishtoday.ts.commandtranslator.Services.TextCommandProcessor;
 import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
 import net.minecraft.world.CommandBlockExecutor;
 import org.apache.commons.lang3.StringUtils;
 import org.spongepowered.asm.mixin.Final;
@@ -25,8 +22,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Map;
 
 @Mixin(CommandManager.class)
 public class CommandManagerMixin {
