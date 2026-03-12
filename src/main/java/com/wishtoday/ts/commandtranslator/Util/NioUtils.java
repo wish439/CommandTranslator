@@ -27,7 +27,16 @@ public class NioUtils {
         }
     }
 
+    public static void createFile(Path path) {
+        try {
+            Files.createFile(path);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed createDirectories " + path.getParent(), e);
+        }
+    }
+
     public static void deleteDirectories(@NotNull Path path) {
+        if (!path.toFile().exists()) return;
         File file = path.toFile();
         deleteDirectories(file);
     }

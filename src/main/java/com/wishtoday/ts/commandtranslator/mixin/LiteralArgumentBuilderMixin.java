@@ -7,13 +7,12 @@ import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.wishtoday.ts.commandtranslator.CommandTranslator.MessageFormatArgumentTranslator;
 import com.wishtoday.ts.commandtranslator.CommandTranslator.TextArgumentTranslator;
+import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
 import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
-import com.wishtoday.ts.commandtranslator.Util.TranslateUtils;
 import net.minecraft.command.argument.MessageArgumentType;
 import net.minecraft.command.argument.TextArgumentType;
-import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -27,6 +26,7 @@ public class LiteralArgumentBuilderMixin {
     private <S> void onBuild(CallbackInfoReturnable<LiteralCommandNode<S>> cir
             , @Local final CommandNode<S> node
             , @Local final LiteralCommandNode<S> result) {
+        if (!Commandtranslator.modActive) return;
         TextCommandManager instance = TextCommandManager.getINSTANCE();
         List<CommandNode<S>> list = CommandParseUtils.getAllChildrenAndItSelf(node);
         for (CommandNode<S> commandNode : list) {

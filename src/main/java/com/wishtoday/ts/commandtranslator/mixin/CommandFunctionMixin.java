@@ -9,11 +9,13 @@ import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.wishtoday.ts.commandtranslator.Cache.CacheInstance;
+import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
 import com.wishtoday.ts.commandtranslator.FunctionHandler.FunctionCreatorManager;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
 import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
+import com.wishtoday.ts.commandtranslator.Util.LanguageUtils;
 import net.minecraft.command.SourcedCommandAction;
 import net.minecraft.server.command.AbstractServerCommandSource;
 import net.minecraft.server.function.CommandFunction;
@@ -30,6 +32,7 @@ public interface CommandFunctionMixin {
             , StringReader reader
             , Operation<SourcedCommandAction<T>> original
             , @Local(argsOnly = true) Identifier id) {
+        if (!Commandtranslator.modActive) return original.call(dispatcher, source, reader);
         ParseResults<T> parse = dispatcher.parse(reader.getString(), source);
         CommandContextBuilder<T> context = parse.getContext();
         CommandParseUtils.changeToDeepest(context);
@@ -45,6 +48,7 @@ public interface CommandFunctionMixin {
 
         String value = instance.getAllCommando2t().getValue(reader.getString());
         if (value != null) {
+            FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
             return original.call(dispatcher, source, new StringReader(value));
         }
 
@@ -52,9 +56,14 @@ public interface CommandFunctionMixin {
 
         if (instance.getAllCommando2t().containsValue(reader.getString())) return original.call(dispatcher, source, reader);
 
-        TranslateResults<?> translated = storage.translate(context, o -> "HELLO WORLD!");
+        TranslateResults<?> translated = storage.translate(context, o -> {
+            if (LanguageUtils.isChineseSentence(o)) return o;
+            return "HELLO WORLD!";
+        });
         if (translated == null) return original.call(dispatcher, source, reader);
         String s = StringUtils.replaceEach(reader.getString(), translated.original(), translated.translated());
+
+        if (reader.getString().equals(s)) return original.call(dispatcher, source, reader);
 
         FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
         instance.getAllCommando2t().put(reader.getString(), s);

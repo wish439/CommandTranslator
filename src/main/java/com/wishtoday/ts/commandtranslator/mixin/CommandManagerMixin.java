@@ -7,16 +7,20 @@ import com.mojang.brigadier.context.ParsedArgument;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.tree.CommandNode;
 import com.wishtoday.ts.commandtranslator.Cache.CacheInstance;
+import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
 import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
+import com.wishtoday.ts.commandtranslator.Util.LanguageUtils;
+import com.wishtoday.ts.commandtranslator.config.Config;
 import com.wishtoday.ts.commandtranslator.mixin.Accessor.ServerCommandSourceAccessor;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.world.CommandBlockExecutor;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,15 +28,20 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.concurrent.CompletableFuture;
+
 @Mixin(CommandManager.class)
 public class CommandManagerMixin {
     @Shadow
     @Final
     private CommandDispatcher<ServerCommandSource> dispatcher;
 
+
     @Inject(method = "execute", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;push(Ljava/util/function/Supplier;)V"))
     private void execute(ParseResults<ServerCommandSource> parseResults
             , String command, CallbackInfo ci) {
+        if (!Commandtranslator.modActive) return;
+        if (!Config.getInstance().isEnableTranslate() || !Config.getInstance().isTranslateCommandBlocks()) return;
         CommandContextBuilder<ServerCommandSource> context = parseResults.getContext();
         ServerCommandSource source = context.getSource();
         if (!(source instanceof ServerCommandSourceAccessor accessor)) return;
@@ -72,11 +81,30 @@ public class CommandManagerMixin {
         if (instance.getAllCommando2t().containsValue(originalCommand)) return;
         //TranslateStringResults right = processor.replaceTheContextNodeAndGetTranslateResult();
 
-        TranslateResults<?> translated = storage.translate(context, o -> "HELLO WORLD!");
+/*
+        TranslateResults<?> translated = storage.translate(context, o -> {
+            if (LanguageUtils.isChineseSentence(o)) {
+                return o;
+            }
+            return "HELLO WORLD!";
+        });
+*/
+        TranslateResults<?> translated = storage.translate(context, o -> {
+            if (LanguageUtils.isChineseSentence(o)) {
+                return o;
+            }
+
+            CompletableFuture<@NotNull String> future = CompletableFuture.supplyAsync(() -> Commandtranslator.translator.translation(o));
+
+            return future.join();
+        });
+
         if (translated == null) return;
         StringRange range = translated.getRange();
         context.withArgument(storage.getArgumentName(), new ParsedArgument<>(range.getStart(), range.getEnd(), translated.getResult()));
         String s = StringUtils.replaceEach(originalCommand, translated.original(), translated.translated());
+
+        if (originalCommand.equals(s)) return;
 
         executor.setCommand(s);
 

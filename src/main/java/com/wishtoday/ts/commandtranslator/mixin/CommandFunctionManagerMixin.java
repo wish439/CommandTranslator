@@ -5,10 +5,7 @@ import com.wishtoday.ts.commandtranslator.FunctionHandler.FunctionCreator;
 import com.wishtoday.ts.commandtranslator.FunctionHandler.FunctionCreatorManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.function.CommandFunction;
-import net.minecraft.server.function.CommandFunctionManager;
-import net.minecraft.server.function.ExpandedMacro;
-import net.minecraft.server.function.FunctionLoader;
+import net.minecraft.server.function.*;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,6 +27,7 @@ public class CommandFunctionManagerMixin {
 
     @Inject(method = "load", at = @At("RETURN"))
     private void loadCommandFunctions(FunctionLoader loader, CallbackInfo ci) {
+        if (!Commandtranslator.modActive) return;
         Map<Identifier, CommandFunction<ServerCommandSource>> map = loader.getFunctions();
         FunctionCreatorManager instance = FunctionCreatorManager.getInstance();
         Set<Identifier> shouldCoverFunctions = instance.getShouldCoverFunctions();

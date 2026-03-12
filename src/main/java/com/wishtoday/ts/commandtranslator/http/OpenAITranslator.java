@@ -18,13 +18,13 @@ public class OpenAITranslator extends AITranslator {
     public OpenAITranslator(String api, String key, String model, int contextNumber) {
         super(api, key, model, contextNumber);
         this.messages = new ArrayList<>();
-        messages.add(new MessageInfo("system", "你是一个Minecraft使用的翻译机器人,请联系上下文更好的翻译为中文\n请根据以下规则翻译:\n1.只输出翻译结果，原因和思考过程不输出。\n2.不翻译Minecraft术语。\n3.不翻译任何指令格式(如果有)"));
+        messages.add(new MessageInfo("system", "你是一个Minecraft使用的翻译机器人,请联系上下文更好的翻译\n请根据以下规则翻译:\n1.只输出翻译结果，原因和思考过程不输出。\n2.不翻译Minecraft术语。\n3.不翻译任何指令格式(如果有)"));
     }
 
     public OpenAITranslator(String api, String key, String model) {
         super(api, key, model);
         this.messages = new ArrayList<>();
-        messages.add(new MessageInfo("system", "你是一个Minecraft使用的翻译机器人,请联系上下文更好的翻译为中文\n请根据以下规则翻译:\n1.只输出翻译结果，原因和思考过程不输出。\n2.不翻译Minecraft术语。\n3.不翻译任何指令格式(如果有)"));
+        messages.add(new MessageInfo("system", "你是一个Minecraft使用的翻译机器人,请联系上下文更好的翻译\n请根据以下规则翻译:\n1.只输出翻译结果，原因和思考过程不输出。\n2.不翻译Minecraft术语。\n3.不翻译任何指令格式(如果有)"));
     }
 
     @Override
@@ -39,25 +39,58 @@ public class OpenAITranslator extends AITranslator {
     @NotNull
     @Override
     public String translation(String s, String language) {
-        this.messages.add(new MessageInfo("user", s + "译为" + language));
-        TranslationRequest translationRequest = new TranslationRequest(this.model, this.messages, false);
-        RequestBody body = RequestBody.create(gson.toJson(translationRequest), MediaType.get("application/json; charset=utf-8"));
+
+        List<MessageInfo> requestMessages;
+
+        synchronized (this) {
+            requestMessages = new ArrayList<>(this.messages);
+        }
+
+        requestMessages.add(new MessageInfo("user", "请翻译为" + language + "，只输出翻译：\n" + s));
+
+        TranslationRequest translationRequest =
+                new TranslationRequest(this.model, requestMessages, false);
+
+        RequestBody body = RequestBody.create(
+                gson.toJson(translationRequest),
+                MediaType.get("application/json; charset=utf-8")
+        );
+
         Request request = new Request.Builder()
                 .url(this.api)
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Authorization", "Bearer " + this.key)
-                .post(body).build();
+                .post(body)
+                .build();
+
         String translation = s;
+
         try (Response execute = client.newCall(request).execute()) {
+
             if (!execute.isSuccessful()) return translation;
-            ResultInfo info = gson.fromJson(execute.body().string(), ResultInfo.class);
+
+            ResultInfo info = gson.fromJson(
+                    execute.body().string(),
+                    ResultInfo.class
+            );
+
             ResultInfo.Result result = info.choices[0];
-            translation = result.message.content;
-            messages.add(result.message);
-            this.limitContextList();
+
+            String content = result.message.content.trim();
+
+            String[] lines = content.split("\n");
+            translation = lines[lines.length - 1].trim();
+
+            synchronized (this) {
+                messages.add(new MessageInfo("user", s + "译为" + language));
+                messages.add(result.message);
+                this.limitContextList();
+            }
+
         } catch (IOException e) {
             Commandtranslator.LOGGER.error("OpenAITranslator error", e);
         }
+
         return translation;
     }
 

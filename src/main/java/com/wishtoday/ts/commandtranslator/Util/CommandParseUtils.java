@@ -4,7 +4,6 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.tree.CommandNode;
-import net.minecraft.server.command.ServerCommandSource;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;

@@ -5,7 +5,6 @@ import com.mojang.brigadier.context.ParsedArgument;
 import com.wishtoday.ts.commandtranslator.CommandTranslator.ArgumentTranslator;
 import lombok.Getter;
 import net.minecraft.server.command.AbstractServerCommandSource;
-import net.minecraft.server.command.ServerCommandSource;
 
 import java.util.function.Function;
 
