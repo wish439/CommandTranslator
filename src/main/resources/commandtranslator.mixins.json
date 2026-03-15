@@ -4,14 +4,15 @@
   "package": "com.wishtoday.ts.commandtranslator.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "ChunkSerializerMixin",
-    "CommandDispatcherMixin",
-    "CommandFunctionManagerMixin",
-    "CommandFunctionMixin",
-    "CommandRegistryMixin",
-    "LiteralArgumentBuilderMixin",
     "MinecraftServerMixin",
-    "Accessor.ServerCommandSourceAccessor"
+    "Accessor.ServerCommandSourceAccessor",
+    "Command.CommandRegistryMixin",
+    "CommandBlockImpl.CB_ChunkSerializerMixin",
+    "CommandBlockImpl.CB_CommandManagerMixin",
+    "FunctionImpl.FC_CommandFunctionManagerMixin",
+    "FunctionImpl.FC_CommandFunctionMixin",
+    "TextNodeParserImpl.CommandDispatcherMixin",
+    "TextNodeParserImpl.LiteralArgumentBuilderMixin"
   ],
   "client": [
   ],

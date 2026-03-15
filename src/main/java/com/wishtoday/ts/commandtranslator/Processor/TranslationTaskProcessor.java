@@ -6,13 +6,13 @@ import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.wishtoday.ts.commandtranslator.Cache.CacheInstance;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
-import com.wishtoday.ts.commandtranslator.Data.BlockEntityPos;
+import com.wishtoday.ts.commandtranslator.Config.Config;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
 import com.wishtoday.ts.commandtranslator.Data.UniqueLinkedBlockingQueue;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
 import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
-import com.wishtoday.ts.commandtranslator.Util.LanguageUtils;
+import com.wishtoday.ts.commandtranslator.Util.TranslateUtils;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.CommandBlockBlockEntity;
 import net.minecraft.server.MinecraftServer;
@@ -91,10 +91,8 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
     }
 
     private void process(BlockEntity blockEntity) {
-        Commandtranslator.LOGGER.info("progress A BlockEntityPos: {} blockEntity: {}", blockEntity, blockEntity);
         if (!(blockEntity instanceof CommandBlockBlockEntity commandBlock)) return;
 
-        Commandtranslator.LOGGER.info("progress B BlockEntityPos: {}", blockEntity);
         CommandBlockExecutor commandExecutor = commandBlock.getCommandExecutor();
         String originalCommand = commandExecutor.getCommand();
 
@@ -103,14 +101,9 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
 
         if (head == null) return;
 
-        Commandtranslator.LOGGER.info("progress C BlockEntityPos: {}", blockEntity);
-
         TextCommandManager manager = TextCommandManager.getINSTANCE();
-
         String name = head.getName();
         if (!"execute".equals(name) && !manager.containsCommand(name)) return;
-
-        Commandtranslator.LOGGER.info("progress D BlockEntityPos: {}", blockEntity);
 
         ParseResults<ServerCommandSource> parse =
                 dispatcher.parse(originalCommand, commandExecutor.getSource());
@@ -123,38 +116,24 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
                 context.getNodes().getFirst().getNode();
 
         if (!manager.containsCommand(headNode.getName())) return;
-
-        Commandtranslator.LOGGER.info("progress E BlockEntityPos: {}", blockEntity);
-
         TextNodeTranslatorStorage<?> storage =
                 manager.getCommand(headNode.getName());
-
         CacheInstance instance = CacheInstance.getINSTANCE();
-
         if (instance.getAllCommando2t().containsKey(originalCommand)) {
             String value = instance.getAllCommando2t().getValue(originalCommand);
-
             server.execute(() -> commandExecutor.setCommand(value));
-
-            Commandtranslator.LOGGER.info("progress F BlockEntityPos: {} value: {}", blockEntity, value);
-
             return;
         }
 
+        Config config = Config.getInstance();
+
         if (instance.getAllCommando2t().containsValue(originalCommand)) return;
 
-        Commandtranslator.LOGGER.info("progress G BlockEntityPos: {}", blockEntity);
+        ProcessorHandler handler = ((ProcessorHandlerInterface) server).getProcessorHandler();
 
-        TranslateResults<?> translated = storage.translate(context, text -> {
-
-            if (LanguageUtils.isChineseSentence(text)) return text;
-
-            return this.translate(text);
-        });
+        TranslateResults<?> translated = storage.translate(context, TranslateUtils.getDefaultTranslateStrategy(config, handler.getProcessor(BatchTranslatorProcessor.class).get()));
 
         if (translated == null) return;
-
-        Commandtranslator.LOGGER.info("progress H BlockEntityPos: {}", blockEntity);
 
         String s = StringUtils.replaceEach(
                 originalCommand,
@@ -164,13 +143,8 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
 
         if (originalCommand.equals(s)) return;
 
-        Commandtranslator.LOGGER.info("progress I BlockEntityPos: {}", blockEntity);
-
         server.execute(() -> commandExecutor.setCommand(s));
-
         instance.getAllCommando2t().put(originalCommand, s);
-
-        Commandtranslator.LOGGER.info("{} has been executed successfully, BlockEntityPos: {}", originalCommand, blockEntity);
     }
 
     private String translate(String text) {

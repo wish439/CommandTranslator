@@ -1,6 +1,5 @@
-package com.wishtoday.ts.commandtranslator.mixin;
+package com.wishtoday.ts.commandtranslator.mixin.Command;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.brigadier.CommandDispatcher;
 import com.wishtoday.ts.commandtranslator.Command.MainCommand;
 import net.minecraft.command.CommandRegistryAccess;

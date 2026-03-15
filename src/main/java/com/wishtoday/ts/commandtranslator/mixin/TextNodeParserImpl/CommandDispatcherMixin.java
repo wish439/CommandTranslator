@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.mixin;
+package com.wishtoday.ts.commandtranslator.mixin.TextNodeParserImpl;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.brigadier.CommandDispatcher;
@@ -7,7 +7,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
-import com.wishtoday.ts.commandtranslator.config.Config;
+import com.wishtoday.ts.commandtranslator.Config.Config;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -19,7 +19,7 @@ public class CommandDispatcherMixin {
     private <S> void register(LiteralArgumentBuilder<S> command
             , CallbackInfoReturnable<LiteralCommandNode<S>> cir
             , @Local final LiteralCommandNode<S> build) {
-        if (!Commandtranslator.modActive) return;
+        if (!Commandtranslator.isModActive()) return;
         TextCommandManager instance = TextCommandManager.getINSTANCE();
         String literal = build.getLiteral();
         if (!instance.containsCache(literal)) {

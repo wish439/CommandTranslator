@@ -1,12 +1,14 @@
-package com.wishtoday.ts.commandtranslator.config;
+package com.wishtoday.ts.commandtranslator.Config;
 
+import com.wishtoday.ts.commandtranslator.Config.Annotation.Comment;
+import com.wishtoday.ts.commandtranslator.Config.Annotation.Range;
+import com.wishtoday.ts.commandtranslator.Config.Annotation.SerializedName;
 import com.wishtoday.ts.commandtranslator.Translator.TranslatorType;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -18,8 +20,9 @@ public class Config {
     @Comment("""
             翻译提供商类型
             可选:
-            OPENAI(默认,deepseek/ChatGPT可用此类型)
+            OPENAI(默认,目前多数模型api均兼容OPENAI参数,如deepseek/chatgpt)
             DEEPL https://www.deepl.com/zh/products/api
+            如需要其他翻译请提交PR或issue,项目地址:https://github.com/wish439/CommandTranslator
             """)
     @SerializedName("translateType")
     private TranslatorType type;
@@ -58,7 +61,38 @@ public class Config {
             """)
     private CommandBlockTranslateStrategy commandBlockTranslateStrategy;
 
+    @Comment("""
+            汉字占整句话的比例大于此值时被认为是中文句子(中文句子则无需翻译)
+            范围:0~1
+            """)
+    @Range(minDouble = 0.0D, maxDouble = 1.0D)
+    private double ChineseSentenceJudgmentRange;
+
+    @Comment("""
+            多行翻译一次翻译的数量
+            """)
+    private int batchSize;
+    @Comment("""
+            多行翻译超时时间(单位:毫秒)
+            """)
+    private long timeout;
+
     private static final ReentrantLock lock = new ReentrantLock();
+
+    public Config() {
+        this.enableTranslate = false;
+        this.translateFunctions = false;
+        this.translateCommandBlocks = false;
+        this.model = "";
+        this.type = TranslatorType.OPENAI;
+        this.provider = new TranslateProvider();
+        this.matchMode = MatchMode.WHITELIST;
+        this.commands = List.of("me", "msg", "say", "teammsg", "tellraw", "title");
+        this.commandBlockTranslateStrategy = CommandBlockTranslateStrategy.LOADING;
+        this.ChineseSentenceJudgmentRange = 0.6;
+        this.batchSize = 20;
+        this.timeout = 50;
+    }
 
     public static synchronized Config getInstance() {
         try {
@@ -97,18 +131,6 @@ public class Config {
         return this.type == null && this.provider == null && this.commands == null;
     }
 
-    public Config() {
-        this.enableTranslate = false;
-        this.translateFunctions = false;
-        this.translateCommandBlocks = false;
-        this.model = "";
-        this.type = TranslatorType.OPENAI;
-        this.provider = new TranslateProvider();
-        this.matchMode = MatchMode.WHITELIST;
-        this.commands = List.of("me", "msg", "say", "teammsg", "tellraw", "title");
-        this.commandBlockTranslateStrategy = CommandBlockTranslateStrategy.LOADING;
-    }
-
     public boolean validate(@NotNull String command) {
         return matchMode == MatchMode.BLACKLIST ? !commands.contains(command) : matchMode == MatchMode.WHITELIST && commands.contains(command);
     }
@@ -124,13 +146,12 @@ public class Config {
                 翻译提供商api
                 如
                 Deepseek:https://api.deepseek.com/chat/completions
-                
                 DEEPL无需填此项
                 """)
         @NotNull
         private String api;
 
-        public TranslateProvider(String key, String api) {
+        public TranslateProvider(@NotNull String key, @NotNull String api) {
             this.key = key;
             this.api = api;
         }

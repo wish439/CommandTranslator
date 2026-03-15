@@ -1,6 +1,7 @@
 package com.wishtoday.ts.commandtranslator.http;
 
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,20 +12,34 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OpenAITranslator extends AITranslator {
+public class OpenAITranslator extends AITranslator implements IBatchTranslator {
 
     private List<MessageInfo> messages;
 
     public OpenAITranslator(String api, String key, String model, int contextNumber) {
         super(api, key, model, contextNumber);
         this.messages = new ArrayList<>();
-        messages.add(new MessageInfo("system", "你是一个Minecraft使用的翻译机器人,请联系上下文更好的翻译\n请根据以下规则翻译:\n1.只输出翻译结果，原因和思考过程不输出。\n2.不翻译Minecraft术语。\n3.不翻译任何指令格式(如果有)"));
+        messages.add(new MessageInfo("system", """
+                你是一个Minecraft使用的翻译机器人,请联系上下文更好的翻译
+                请根据以下规则翻译:
+                1.只输出翻译结果，原因和思考过程不输出。
+                2.不翻译Minecraft术语。
+                3.不翻译任何指令格式(如果有)
+                4.如果是json数组，请保持json格式
+                """));
     }
 
     public OpenAITranslator(String api, String key, String model) {
         super(api, key, model);
         this.messages = new ArrayList<>();
-        messages.add(new MessageInfo("system", "你是一个Minecraft使用的翻译机器人,请联系上下文更好的翻译\n请根据以下规则翻译:\n1.只输出翻译结果，原因和思考过程不输出。\n2.不翻译Minecraft术语。\n3.不翻译任何指令格式(如果有)"));
+        messages.add(new MessageInfo("system", """
+                你是一个Minecraft使用的翻译机器人,请联系上下文更好的翻译
+                请根据以下规则翻译:
+                1.只输出翻译结果，原因和思考过程不输出。
+                2.不翻译Minecraft术语。
+                3.不翻译任何指令格式(如果有)
+                4.如果是json数组，请保持json格式
+                """));
     }
 
     @Override
@@ -40,11 +55,7 @@ public class OpenAITranslator extends AITranslator {
     @Override
     public String translation(String s, String language) {
 
-        List<MessageInfo> requestMessages;
-
-        synchronized (this) {
-            requestMessages = new ArrayList<>(this.messages);
-        }
+        List<MessageInfo> requestMessages = new ArrayList<>();
 
         requestMessages.add(new MessageInfo("user", "请翻译为" + language + "，只输出翻译：\n" + s));
 
@@ -76,16 +87,7 @@ public class OpenAITranslator extends AITranslator {
 
             ResultInfo.Result result = info.choices[0];
 
-            String content = result.message.content.trim();
-
-            String[] lines = content.split("\n");
-            translation = lines[lines.length - 1].trim();
-
-            synchronized (this) {
-                messages.add(new MessageInfo("user", s + "译为" + language));
-                messages.add(result.message);
-                this.limitContextList();
-            }
+            translation = result.message.content;
 
         } catch (IOException e) {
             Commandtranslator.LOGGER.error("OpenAITranslator error", e);
@@ -98,6 +100,13 @@ public class OpenAITranslator extends AITranslator {
     @Override
     public String translation(String s) {
         return this.translation(s, "中文");
+    }
+
+    @Override
+    public List<String> translate(List<String> strings) {
+        String json = gson.toJson(strings);
+        String translation = this.translation(json);
+        return gson.fromJson(translation, new TypeToken<>() {});
     }
 
     @AllArgsConstructor

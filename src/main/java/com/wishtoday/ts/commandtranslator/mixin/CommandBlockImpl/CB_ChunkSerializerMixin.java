@@ -1,13 +1,9 @@
-package com.wishtoday.ts.commandtranslator.mixin;
+package com.wishtoday.ts.commandtranslator.mixin.CommandBlockImpl;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import com.wishtoday.ts.commandtranslator.Commandtranslator;
-import com.wishtoday.ts.commandtranslator.Data.BlockEntityPos;
-import com.wishtoday.ts.commandtranslator.Processor.Processor;
 import com.wishtoday.ts.commandtranslator.Processor.ProcessorHandlerInterface;
-import com.wishtoday.ts.commandtranslator.Processor.ProcessorHandler;
 import com.wishtoday.ts.commandtranslator.Processor.TranslationTaskProcessor;
-import com.wishtoday.ts.commandtranslator.config.Config;
+import com.wishtoday.ts.commandtranslator.Config.Config;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.CommandBlockBlockEntity;
 import net.minecraft.nbt.NbtCompound;
@@ -24,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Optional;
 
 @Mixin(ChunkSerializer.class)
-public class ChunkSerializerMixin {
+public class CB_ChunkSerializerMixin {
     //private static boolean testing = false;
     /**
      * Called when a BlockEntity is loaded from disk during chunk deserialization.
@@ -38,7 +34,9 @@ public class ChunkSerializerMixin {
      */
     @Inject(method = "method_39797", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/WorldChunk;setBlockEntity(Lnet/minecraft/block/entity/BlockEntity;)V"))
     private static void method(NbtList nbtList, ServerWorld serverWorld, NbtList nbtList2, WorldChunk chunk, CallbackInfo ci, @Local BlockEntity blockEntity) {
-        if (!Config.getInstance().isEnableTranslate() || !Config.getInstance().isTranslateCommandBlocks()) return;
+        Config config = Config.getInstance();
+        if (!config.isEnableTranslate() || !config.isTranslateCommandBlocks()) return;
+        if (config.getCommandBlockTranslateStrategy() != Config.CommandBlockTranslateStrategy.LOADING) return;
         if (blockEntity == null) return;
         if (!(blockEntity instanceof CommandBlockBlockEntity)) return;
 

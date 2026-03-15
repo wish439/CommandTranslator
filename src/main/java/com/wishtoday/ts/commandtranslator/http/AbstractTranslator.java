@@ -3,7 +3,7 @@ package com.wishtoday.ts.commandtranslator.http;
 import com.google.gson.Gson;
 import okhttp3.OkHttpClient;
 
-public abstract class AbstractTranslator implements ITranslator {
+public abstract class AbstractTranslator implements ITranslators {
     protected final String api;
     protected final String key;
     public static final Gson gson = new Gson();

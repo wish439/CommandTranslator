@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.mixin;
+package com.wishtoday.ts.commandtranslator.mixin.TextNodeParserImpl;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -26,7 +26,7 @@ public class LiteralArgumentBuilderMixin {
     private <S> void onBuild(CallbackInfoReturnable<LiteralCommandNode<S>> cir
             , @Local final CommandNode<S> node
             , @Local final LiteralCommandNode<S> result) {
-        if (!Commandtranslator.modActive) return;
+        if (!Commandtranslator.isModActive()) return;
         TextCommandManager instance = TextCommandManager.getINSTANCE();
         List<CommandNode<S>> list = CommandParseUtils.getAllChildrenAndItSelf(node);
         for (CommandNode<S> commandNode : list) {

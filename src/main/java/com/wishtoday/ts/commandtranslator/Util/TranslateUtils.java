@@ -1,15 +1,34 @@
 package com.wishtoday.ts.commandtranslator.Util;
 
-import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
-import net.minecraft.command.argument.MessageArgumentType;
-import net.minecraft.text.Text;
-import org.apache.commons.compress.utils.Lists;
+import com.wishtoday.ts.commandtranslator.Commandtranslator;
+import com.wishtoday.ts.commandtranslator.Config.Config;
+import com.wishtoday.ts.commandtranslator.Processor.BatchTranslatorProcessor;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 
 public class TranslateUtils {
-    public static TranslateResults<Text> translateText(Text text) {
-        return new TranslateResults<>(Text.of("HelloWorld"), Lists.newArrayList(), Lists.newArrayList(), null);
-    }
-    public static TranslateResults<MessageArgumentType.MessageFormat> translateMessageFormat(MessageArgumentType.MessageFormat format) {
-        return new TranslateResults<>(new MessageArgumentType.MessageFormat("HelloWorld", new MessageArgumentType.MessageSelector[0]), Lists.newArrayList(), Lists.newArrayList(), null);
+    public static Function<String, String> getDefaultTranslateStrategy(Config config, BatchTranslatorProcessor processor) {
+        return s -> {
+            if (LanguageUtils.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return s;
+
+            CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return processor.submit(s).get(3, TimeUnit.SECONDS);
+                } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                    Commandtranslator.LOGGER.error(e.getMessage());
+                    return s;
+                }
+            });
+            try {
+                return future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                Commandtranslator.LOGGER.error(e.getMessage());
+                return s;
+            }
+        };
     }
 }

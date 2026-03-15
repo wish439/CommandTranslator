@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.mixin;
+package com.wishtoday.ts.commandtranslator.mixin.FunctionImpl;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -14,8 +14,10 @@ import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
 import com.wishtoday.ts.commandtranslator.FunctionHandler.FunctionCreatorManager;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
+import com.wishtoday.ts.commandtranslator.Processor.BatchTranslatorProcessor;
 import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
-import com.wishtoday.ts.commandtranslator.Util.LanguageUtils;
+import com.wishtoday.ts.commandtranslator.Config.Config;
+import com.wishtoday.ts.commandtranslator.Util.TranslateUtils;
 import net.minecraft.command.SourcedCommandAction;
 import net.minecraft.server.command.AbstractServerCommandSource;
 import net.minecraft.server.function.CommandFunction;
@@ -25,14 +27,17 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(CommandFunction.class)
-public interface CommandFunctionMixin {
+public interface FC_CommandFunctionMixin {
     @WrapOperation(method = "create", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/function/CommandFunction;parse(Lcom/mojang/brigadier/CommandDispatcher;Lnet/minecraft/server/command/AbstractServerCommandSource;Lcom/mojang/brigadier/StringReader;)Lnet/minecraft/command/SourcedCommandAction;"))
     private static <T extends AbstractServerCommandSource<T>> SourcedCommandAction<T> parse(
             CommandDispatcher<T> dispatcher, T source
             , StringReader reader
             , Operation<SourcedCommandAction<T>> original
             , @Local(argsOnly = true) Identifier id) {
-        if (!Commandtranslator.modActive) return original.call(dispatcher, source, reader);
+        if (!Commandtranslator.isModActive()) return original.call(dispatcher, source, reader);
+        Config config = Config.getInstance();
+        if (!config.isEnableTranslate() || !config.isTranslateFunctions())
+            return original.call(dispatcher, source, reader);
         ParseResults<T> parse = dispatcher.parse(reader.getString(), source);
         CommandContextBuilder<T> context = parse.getContext();
         CommandParseUtils.changeToDeepest(context);
@@ -54,12 +59,12 @@ public interface CommandFunctionMixin {
 
         //TranslateStringResults right = processor.replaceTheContextNodeAndGetTranslateResult();
 
-        if (instance.getAllCommando2t().containsValue(reader.getString())) return original.call(dispatcher, source, reader);
+        if (instance.getAllCommando2t().containsValue(reader.getString()))
+            return original.call(dispatcher, source, reader);
 
-        TranslateResults<?> translated = storage.translate(context, o -> {
-            if (LanguageUtils.isChineseSentence(o)) return o;
-            return "HELLO WORLD!";
-        });
+        BatchTranslatorProcessor processor = Commandtranslator.getProcessorWrapper().getWrapped();
+
+        TranslateResults<?> translated = storage.translate(context, TranslateUtils.getDefaultTranslateStrategy(config, processor));
         if (translated == null) return original.call(dispatcher, source, reader);
         String s = StringUtils.replaceEach(reader.getString(), translated.original(), translated.translated());
 

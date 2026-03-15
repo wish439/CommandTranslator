@@ -1,8 +1,9 @@
-package com.wishtoday.ts.commandtranslator.mixin;
+package com.wishtoday.ts.commandtranslator.mixin.FunctionImpl;
 
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.FunctionHandler.FunctionCreator;
 import com.wishtoday.ts.commandtranslator.FunctionHandler.FunctionCreatorManager;
+import com.wishtoday.ts.commandtranslator.Config.Config;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.function.*;
@@ -20,14 +21,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Mixin(CommandFunctionManager.class)
-public class CommandFunctionManagerMixin {
+public class FC_CommandFunctionManagerMixin {
     @Shadow
     @Final
     private MinecraftServer server;
 
     @Inject(method = "load", at = @At("RETURN"))
     private void loadCommandFunctions(FunctionLoader loader, CallbackInfo ci) {
-        if (!Commandtranslator.modActive) return;
+        if (!Commandtranslator.isModActive()) return;
+        Config config = Config.getInstance();
+        if (!config.isEnableTranslate() || !config.isTranslateFunctions()) return;
         Map<Identifier, CommandFunction<ServerCommandSource>> map = loader.getFunctions();
         FunctionCreatorManager instance = FunctionCreatorManager.getInstance();
         Set<Identifier> shouldCoverFunctions = instance.getShouldCoverFunctions();

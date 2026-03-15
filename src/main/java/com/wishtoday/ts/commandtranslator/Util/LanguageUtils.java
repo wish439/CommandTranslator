@@ -1,7 +1,7 @@
 package com.wishtoday.ts.commandtranslator.Util;
 
 public class LanguageUtils {
-    public static boolean isChineseSentence(String sentence) {
+    public static boolean isChineseSentence(String sentence, double range) {
 
         int han = 0;
         int total = 0;
@@ -23,6 +23,6 @@ public class LanguageUtils {
 
         if (total == 0) return false;
 
-        return ((double) han / total) > 0.6;
+        return ((double) han / total) > range;
     }
 }
