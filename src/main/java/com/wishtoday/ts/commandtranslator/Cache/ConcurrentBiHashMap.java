@@ -75,4 +75,8 @@ public class ConcurrentBiHashMap<K,V> {
     public boolean containsValue(V value) {
         return v2k.containsKey(value);
     }
+
+    public boolean isEmpty() {
+        return k2v.isEmpty() || v2k.isEmpty();
+    }
 }

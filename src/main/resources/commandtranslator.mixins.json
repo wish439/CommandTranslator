@@ -14,8 +14,6 @@
     "TextNodeParserImpl.CommandDispatcherMixin",
     "TextNodeParserImpl.LiteralArgumentBuilderMixin"
   ],
-  "client": [
-  ],
   "injectors": {
     "defaultRequire": 1
   },

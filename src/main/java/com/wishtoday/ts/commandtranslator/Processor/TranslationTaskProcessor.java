@@ -110,7 +110,7 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
 
         CommandContextBuilder<ServerCommandSource> context = parse.getContext();
 
-        CommandParseUtils.changeToDeepest(context);
+        context = CommandParseUtils.changeToDeepest(context);
 
         CommandNode<ServerCommandSource> headNode =
                 context.getNodes().getFirst().getNode();

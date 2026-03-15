@@ -11,10 +11,11 @@ import java.util.Collection;
 import java.util.List;
 
 public class CommandParseUtils {
-    public static <T> void changeToDeepest(CommandContextBuilder<T> context) {
+    public static <T> CommandContextBuilder<T> changeToDeepest(CommandContextBuilder<T> context) {
         while (context.getChild() != null) {
             context = context.getChild();
         }
+        return context;
     }
 
     public static <S> List<CommandNode<S>> getAllChildrenAndItSelf(CommandNode<S> node) {

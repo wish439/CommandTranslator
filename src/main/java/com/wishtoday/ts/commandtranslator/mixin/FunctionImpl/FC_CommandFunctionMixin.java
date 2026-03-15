@@ -40,7 +40,7 @@ public interface FC_CommandFunctionMixin {
             return original.call(dispatcher, source, reader);
         ParseResults<T> parse = dispatcher.parse(reader.getString(), source);
         CommandContextBuilder<T> context = parse.getContext();
-        CommandParseUtils.changeToDeepest(context);
+        context = CommandParseUtils.changeToDeepest(context);
 
         TextCommandManager manager = TextCommandManager.getINSTANCE();
         CommandNode<T> headNode = context.getNodes().getFirst().getNode();
@@ -49,18 +49,22 @@ public interface FC_CommandFunctionMixin {
 
         TextNodeTranslatorStorage<?> storage = manager.getCommand(headNode.getName());
 
-        CacheInstance instance = CacheInstance.getINSTANCE();
+        CacheInstance cache = CacheInstance.getINSTANCE();
 
-        String value = instance.getAllCommando2t().getValue(reader.getString());
+        System.out.println("Loading");
+
+        if (cache.getAllCommando2t().containsValue(reader.getString())) {
+            FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
+            return original.call(dispatcher, source, reader);
+        }
+
+        String value = cache.getAllCommando2t().getValue(reader.getString());
         if (value != null) {
             FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
             return original.call(dispatcher, source, new StringReader(value));
         }
 
         //TranslateStringResults right = processor.replaceTheContextNodeAndGetTranslateResult();
-
-        if (instance.getAllCommando2t().containsValue(reader.getString()))
-            return original.call(dispatcher, source, reader);
 
         BatchTranslatorProcessor processor = Commandtranslator.getProcessorWrapper().getWrapped();
 
@@ -71,7 +75,7 @@ public interface FC_CommandFunctionMixin {
         if (reader.getString().equals(s)) return original.call(dispatcher, source, reader);
 
         FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
-        instance.getAllCommando2t().put(reader.getString(), s);
+        cache.getAllCommando2t().put(reader.getString(), s);
 
         return original.call(dispatcher, source, new StringReader(s));
     }

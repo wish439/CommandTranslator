@@ -38,16 +38,18 @@ public class NioUtils {
     public static void deleteDirectories(@NotNull Path path) {
         if (!path.toFile().exists()) return;
         File file = path.toFile();
-        deleteDirectories(file);
+        DeleteDir(file);
     }
 
-    public static void deleteDirectories(@NotNull File file) {
-        if (file.isDirectory()) {
-            for (File f : file.listFiles()) {
-                deleteDirectories(f);
+    public static void DeleteDir(File dir) {
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (!file.delete()) {
+                    DeleteDir(file);
+                }
             }
-        } else {
-            file.delete();
         }
+        dir.delete();
     }
 }

@@ -14,6 +14,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.world.level.storage.LevelStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,6 +72,10 @@ public class Commandtranslator implements ModInitializer {
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> runnable.run());
         this.registerEvents();
+
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+            System.out.println("server started");
+        });
 
     }
 

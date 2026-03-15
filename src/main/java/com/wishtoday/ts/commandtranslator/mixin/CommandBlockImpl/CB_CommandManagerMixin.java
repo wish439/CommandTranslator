@@ -50,7 +50,7 @@ public class CB_CommandManagerMixin {
         CommandOutput output = accessor.getOutput();
         if (!(output instanceof CommandBlockExecutor executor)) return;
 
-        CommandParseUtils.changeToDeepest(context);
+        context = CommandParseUtils.changeToDeepest(context);
 
         TextCommandManager manager = TextCommandManager.getINSTANCE();
         CommandNode<ServerCommandSource> headNode = context.getNodes().getFirst().getNode();
@@ -70,7 +70,7 @@ public class CB_CommandManagerMixin {
 
             ParseResults<ServerCommandSource> parse = this.dispatcher.parse(value, context.getSource());
             CommandContextBuilder<ServerCommandSource> parseContext = parse.getContext();
-            CommandParseUtils.changeToDeepest(parseContext);
+            parseContext = CommandParseUtils.changeToDeepest(parseContext);
 
             ParsedArgument<ServerCommandSource, ?> argument = parseContext.getArguments().get(storage.argumentName());
 

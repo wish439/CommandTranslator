@@ -28,8 +28,6 @@ import java.util.stream.Collectors;
 public class FunctionCreator {
     private static final String FUNCTION_DIRECTORY = "function";
 
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-
     FunctionCreator() {
 
     }

@@ -64,7 +64,7 @@ public class TextCommandProcessor {
             text = node.getRight().result();
         }
 
-        changeToDeepest(this.context);
+        this.context = changeToDeepest(this.context);
 
         this.context.withArgument(nodeName, new ParsedArgument<>(stringRange.getStart(), stringRange.getEnd(), text));
     }
@@ -80,7 +80,7 @@ public class TextCommandProcessor {
         else nodeName = node.getRight().nodeName();
         if (nodeName == null || nodeName.isEmpty()) return null;
         Pair<ParsedArgument<ServerCommandSource, ?>, TranslateStringResults> results = this.getParsedArgumentAndTranslateResults(node);
-        changeToDeepest(this.context);
+        this.context = changeToDeepest(this.context);
         this.context.withArgument(nodeName, results.getLeft());
 
         return results.getRight();
