@@ -146,18 +146,4 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
         server.execute(() -> commandExecutor.setCommand(s));
         instance.getAllCommando2t().put(originalCommand, s);
     }
-
-    private String translate(String text) {
-
-        try {
-            Future<String> future = translateExecutor.submit(
-                    () -> Commandtranslator.translator.translation(text)
-            );
-            return future.get(15, TimeUnit.SECONDS);
-
-        } catch (Exception e) {
-            Commandtranslator.LOGGER.error("Translate failed", e);
-            return text;
-        }
-    }
 }
