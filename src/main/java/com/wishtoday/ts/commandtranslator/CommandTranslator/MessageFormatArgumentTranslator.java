@@ -8,10 +8,12 @@ import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
 import com.wishtoday.ts.commandtranslator.Reader.CommandParser;
 import com.wishtoday.ts.commandtranslator.Reader.SelectorCommandParser;
 import net.minecraft.command.argument.MessageArgumentType;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 
@@ -40,11 +42,41 @@ public class MessageFormatArgumentTranslator implements ArgumentTranslator<Messa
         try {
             format1 = MessageArgumentType.MessageFormat.parse(new StringReader(s), true);
         } catch (CommandSyntaxException e) {
-            Commandtranslator.LOGGER.error(e.getMessage());
+            Commandtranslator.LOGGER.error("MessageFormatArgumentTranslator.translate throw{}", e.getMessage());
         }
         if (format1 == null) {
             return null;
         }
         return new TranslateResults<>(format1, original, translated, range);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<TranslateResults<MessageArgumentType.MessageFormat>> translateAsync(MessageArgumentType.MessageFormat format, StringRange range, Function<String, CompletableFuture<String>> o2nFunction) {
+        List<String> original = new ArrayList<>();
+        List<String> translated = new ArrayList<>();
+        String contents = format.contents();
+        CommandParser<SelectorCommandParser.ParsedResult> parser = SelectorCommandParser.of(contents);
+
+        SelectorCommandParser.ParsedResult parse = parser.parse();
+
+        parse.getReadElements().stream().filter(e -> !e.isSelector()).map(SelectorCommandParser.ReadElement::content).forEach(original::add);
+
+        CompletableFuture<SelectorCommandParser.ParsedResult> result = parse.changeAllTextAsync(o2nFunction);
+
+        return result.thenApply(parsedResult -> {
+            parsedResult.getReadElements().stream().filter(e -> !e.isSelector()).map(SelectorCommandParser.ReadElement::content).forEach(translated::add);
+            MessageArgumentType.MessageFormat format1 = null;
+            String s = parsedResult.toString();
+            try {
+                format1 = MessageArgumentType.MessageFormat.parse(new StringReader(s), true);
+            } catch (CommandSyntaxException e) {
+                Commandtranslator.LOGGER.error("MessageFormatArgumentTranslator.translate throw", e);
+            }
+            if (format1 == null) {
+                Commandtranslator.LOGGER.warn("MessageFormatArgumentTranslator.translate will return null");
+                return null;
+            }
+            return new TranslateResults<>(format1, original, translated, range);
+        });
     }
 }

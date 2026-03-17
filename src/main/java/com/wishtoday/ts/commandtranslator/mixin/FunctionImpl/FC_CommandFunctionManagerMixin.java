@@ -43,5 +43,6 @@ public class FC_CommandFunctionManagerMixin {
                 .collect(Collectors.toList());
         FunctionCreator creator = instance.getCreator();
         creator.create(new FunctionCreator.FunctionDataPack(String.format("This is a cover datapack, generate by %s", Commandtranslator.MOD_ID), collect, Commandtranslator.DataPackName), server);
+        shouldCoverFunctions.clear();
     }
 }

@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -114,6 +115,28 @@ public final class SelectorCommandParser implements CommandParser<SelectorComman
                 newList.add(readElement);
             }
             return new ParsedResult(newList);
+        }
+
+        public CompletableFuture<ParsedResult> changeAllTextAsync(Function<String, CompletableFuture<String>> function) {
+            List<CompletableFuture<ReadElement>> newList = new ArrayList<>();
+            for (ReadElement element : readElements) {
+                if (element.isSelector()) {
+                    newList.add(CompletableFuture.completedFuture(element));
+                    continue;
+                }
+
+                CompletableFuture<ReadElement> future = function.apply(element.content)
+                        .thenApply(s -> new ReadElement(s, false));
+                newList.add(future);
+            }
+            return CompletableFuture.allOf(newList.toArray(new CompletableFuture[0]))
+                    .thenApply(v -> {
+                        List<ReadElement> elements = new ArrayList<>(newList.size());
+                        for (CompletableFuture<ReadElement> future : newList) {
+                            elements.add(future.join());
+                        }
+                        return new ParsedResult(elements);
+                    });
         }
         @Override
         public @NotNull String toString() {

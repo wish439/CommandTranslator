@@ -36,7 +36,7 @@ public class JsonSaver implements DataSaver {
                 Files.createFile(path);
             }
         } catch (IOException e) {
-            Commandtranslator.LOGGER.error(e.getMessage());
+            Commandtranslator.LOGGER.error("JsonSaver throw{}", e.getMessage());
         }
     }
 
@@ -46,7 +46,7 @@ public class JsonSaver implements DataSaver {
         try (FileWriter writer = new FileWriter(this.path.toFile())) {
             this.gson.toJson(data, writer);
         } catch (IOException e) {
-            Commandtranslator.LOGGER.error(e.getMessage());
+            Commandtranslator.LOGGER.error("JsonSaver throw{}", e.getMessage());
         }
 
         //System.out.println(this.gson.toJson(data));
@@ -60,7 +60,7 @@ public class JsonSaver implements DataSaver {
         try (FileReader reader = new FileReader(this.path.toFile())) {
             instance = this.gson.fromJson(reader, CacheInstance.class);
         } catch (IOException e) {
-            Commandtranslator.LOGGER.error(e.getMessage());
+            Commandtranslator.LOGGER.error("JsonSaver throw{}", e.getMessage());
             return null;
         }
         if (instance == null || instance.isEmpty()) return null;

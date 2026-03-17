@@ -145,7 +145,7 @@ public class TextCommandProcessor {
         try {
             format1 = MessageArgumentType.MessageFormat.parse(new StringReader(s), true);
         } catch (CommandSyntaxException e) {
-            Commandtranslator.LOGGER.error(e.getMessage());
+            Commandtranslator.LOGGER.error("Text{}", e.getMessage());
         }
         if (format1 == null) {
             return null;

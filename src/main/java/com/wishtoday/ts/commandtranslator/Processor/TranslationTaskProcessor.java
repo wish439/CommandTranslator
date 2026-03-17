@@ -131,19 +131,29 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
 
         ProcessorHandler handler = ((ProcessorHandlerInterface) server).getProcessorHandler();
 
-        TranslateResults<?> translated = storage.translate(context, TranslateUtils.getDefaultTranslateStrategy(config, handler.getProcessor(BatchTranslatorProcessor.class).get()));
+        CompletableFuture<? extends TranslateResults<?>> future = storage.translateAsync(context,
+                TranslateUtils.getDefaultAsyncTranslateStrategy(config,
+                        handler.getProcessor(BatchTranslatorProcessor.class).get()));
+        if (future == null) return;
+        future.thenAccept(result -> {
+                    if (result == null) return;
 
-        if (translated == null) return;
+                    String s = StringUtils.replaceEach(
+                            originalCommand,
+                            result.original(),
+                            result.translated()
+                    );
+                    if (originalCommand.equals(s)) return;
 
-        String s = StringUtils.replaceEach(
-                originalCommand,
-                translated.original(),
-                translated.translated()
-        );
-
-        if (originalCommand.equals(s)) return;
-
-        server.execute(() -> commandExecutor.setCommand(s));
-        instance.getAllCommando2t().put(originalCommand, s);
+                    Commandtranslator.LOGGER.info("submit the {} translated {}", originalCommand, s);
+                    server.execute(() -> commandExecutor.setCommand(s));
+                    instance.getAllCommando2t().put(originalCommand, s);
+                })
+                .exceptionally(
+                        e -> {
+                            Commandtranslator.LOGGER.error("translate failed {}",originalCommand, e);
+                            return null;
+                        }
+                );
     }
 }

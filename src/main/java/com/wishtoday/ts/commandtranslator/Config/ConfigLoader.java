@@ -42,7 +42,7 @@ public class ConfigLoader {
             return instance;
         } catch (Exception e) {
             Commandtranslator.setModActive(false);
-            Commandtranslator.LOGGER.error(e.getMessage());
+            Commandtranslator.LOGGER.error("ConfigLoader#load threw{}", e.getMessage());
             throw new UncheckedException(e);
         }
     }

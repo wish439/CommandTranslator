@@ -7,6 +7,7 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 public class TextHandleUtils {
@@ -48,6 +49,36 @@ public class TextHandleUtils {
                     text1.getSiblings().forEach(mutableText::append);
                     return (Text) mutableText;
                 }).toList();
+    }
+
+    @NotNull
+    public static CompletableFuture<List<Text>> handleAllStringInTextAsync(
+            @NotNull List<Text> texts,
+            Function<String, CompletableFuture<String>> function
+    ) {
+        List<CompletableFuture<Text>> futures = texts.stream().distinct()
+                .filter(text1 -> text1.getContent() instanceof PlainTextContent)
+                .map(text1 -> {
+                    PlainTextContent content = (PlainTextContent) text1.getContent();
+                    String s = content.string();
+
+                    return function.apply(s).thenApply(translated -> {
+                        MutableText mutableText = MutableText
+                                .of(PlainTextContent.of(translated))
+                                .setStyle(text1.getStyle());
+
+                        text1.getSiblings().forEach(mutableText::append);
+                        return (Text) mutableText;
+                    });
+                })
+                .toList();
+        return CompletableFuture
+                .allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v ->
+                        futures.stream()
+                                .map(CompletableFuture::join)
+                                .toList()
+                );
     }
 
     @NotNull

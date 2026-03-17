@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BatchTranslatorProcessor implements FunctionProcessor<String, CompletableFuture<String>>{
     private final int batchSize;
@@ -22,6 +23,8 @@ public class BatchTranslatorProcessor implements FunctionProcessor<String, Compl
     private final Map<String, CompletableFuture<String>> map;
 
     private final ExecutorService worker;
+
+    private final AtomicBoolean processing = new AtomicBoolean(false);
 
     public BatchTranslatorProcessor(int batchSize, long timeout, IBatchTranslator translator) {
         this.batchSize = batchSize;
@@ -64,7 +67,16 @@ public class BatchTranslatorProcessor implements FunctionProcessor<String, Compl
     }
 
     private void processQueue() {
-        worker.submit(this::flush);
+        if (!processing.compareAndSet(false, true)) {
+            return;
+        }
+        worker.submit(() -> {
+            try {
+                flush();
+            } finally {
+                processing.set(false);
+            }
+        });
     }
 
     private void flush() {
@@ -76,9 +88,11 @@ public class BatchTranslatorProcessor implements FunctionProcessor<String, Compl
             }
             tasks.add(task);
         }
+        if (tasks.isEmpty()) return;
         List<String> list = tasks.stream().map(Task::getString).toList();
         Commandtranslator.LOGGER.info("submit to translator:{}", list);
         List<String> translated = translator.translate(list);
+        Commandtranslator.LOGGER.info("receive the translate:{}", translated);
         for (int i = 0; i < translated.size(); i++) {
             Task task = tasks.get(i);
             String s = translated.get(i);
@@ -86,6 +100,7 @@ public class BatchTranslatorProcessor implements FunctionProcessor<String, Compl
             map.remove(task.string);
         }
         this.currentTime = -1;
+        Commandtranslator.LOGGER.info("This translator has been processed");
     }
 
     @Override
