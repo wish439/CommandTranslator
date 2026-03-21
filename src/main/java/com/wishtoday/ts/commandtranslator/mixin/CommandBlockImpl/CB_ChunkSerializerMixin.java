@@ -1,6 +1,7 @@
 package com.wishtoday.ts.commandtranslator.mixin.CommandBlockImpl;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Processor.ProcessorHandlerInterface;
 import com.wishtoday.ts.commandtranslator.Processor.TranslationTaskProcessor;
 import com.wishtoday.ts.commandtranslator.Config.Config;
@@ -39,6 +40,8 @@ public class CB_ChunkSerializerMixin {
         if (config.getCommandBlockTranslateStrategy() != Config.CommandBlockTranslateStrategy.LOADING) return;
         if (blockEntity == null) return;
         if (!(blockEntity instanceof CommandBlockBlockEntity)) return;
+
+        //Commandtranslator.LOGGER.info(blockEntity.getPos().toString());
 
         MinecraftServer server = serverWorld.getServer();
         ProcessorHandlerInterface handlerInterface = (ProcessorHandlerInterface) server;

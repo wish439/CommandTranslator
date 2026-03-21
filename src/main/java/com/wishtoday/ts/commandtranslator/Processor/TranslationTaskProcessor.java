@@ -96,6 +96,10 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
         CommandBlockExecutor commandExecutor = commandBlock.getCommandExecutor();
         String originalCommand = commandExecutor.getCommand();
 
+        if (originalCommand.startsWith("/")) {
+            originalCommand = originalCommand.substring(1);
+        }
+
         CommandNode<ServerCommandSource> head =
                 CommandParseUtils.getNodeFromCommandHead(originalCommand, dispatcher);
 
@@ -135,23 +139,24 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
                 TranslateUtils.getDefaultAsyncTranslateStrategy(config,
                         handler.getProcessor(BatchTranslatorProcessor.class).get()));
         if (future == null) return;
+        String finalOriginalCommand = originalCommand;
         future.thenAccept(result -> {
                     if (result == null) return;
 
                     String s = StringUtils.replaceEach(
-                            originalCommand,
+                            finalOriginalCommand,
                             result.original(),
                             result.translated()
                     );
-                    if (originalCommand.equals(s)) return;
+                    if (finalOriginalCommand.equals(s)) return;
 
-                    Commandtranslator.LOGGER.info("submit the {} translated {}", originalCommand, s);
+                    Commandtranslator.LOGGER.info("submit the {} translated {}", finalOriginalCommand, s);
                     server.execute(() -> commandExecutor.setCommand(s));
-                    instance.getAllCommando2t().put(originalCommand, s);
+                    instance.getAllCommando2t().put(finalOriginalCommand, s);
                 })
                 .exceptionally(
                         e -> {
-                            Commandtranslator.LOGGER.error("translate failed {}",originalCommand, e);
+                            Commandtranslator.LOGGER.error("translate failed {}", finalOriginalCommand, e);
                             return null;
                         }
                 );

@@ -34,7 +34,9 @@ public interface FC_CommandFunctionMixin {
             , StringReader reader
             , Operation<SourcedCommandAction<T>> original
             , @Local(argsOnly = true) Identifier id) {
+        //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage -A");
         if (!Commandtranslator.isModActive()) return original.call(dispatcher, source, reader);
+        //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage -B");
         Config config = Config.getInstance();
         if (!config.isEnableTranslate() || !config.isTranslateFunctions())
             return original.call(dispatcher, source, reader);
@@ -45,21 +47,24 @@ public interface FC_CommandFunctionMixin {
         TextCommandManager manager = TextCommandManager.getINSTANCE();
         CommandNode<T> headNode = context.getNodes().getFirst().getNode();
 
+        //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage A data:{}", headNode);
+
         if (!manager.containsCommand(headNode.getName())) return original.call(dispatcher, source, reader);
 
         TextNodeTranslatorStorage<?> storage = manager.getCommand(headNode.getName());
 
         CacheInstance cache = CacheInstance.getINSTANCE();
 
-        System.out.println("Loading");
-
         if (cache.getAllCommando2t().containsValue(reader.getString())) {
             FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
+            //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage B containsValue block data:{}", id);
             return original.call(dispatcher, source, reader);
         }
 
         String value = cache.getAllCommando2t().getValue(reader.getString());
         if (value != null) {
+
+           // Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage C value!=null data:{}:{}", id, value);
             FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
             return original.call(dispatcher, source, new StringReader(value));
         }
@@ -71,8 +76,11 @@ public interface FC_CommandFunctionMixin {
         TranslateResults<?> translated = storage.translate(context, TranslateUtils.getDefaultTranslateStrategy(config, processor));
         if (translated == null) return original.call(dispatcher, source, reader);
         String s = StringUtils.replaceEach(reader.getString(), translated.original(), translated.translated());
+        //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage D data:{}", s);
 
         if (reader.getString().equals(s)) return original.call(dispatcher, source, reader);
+
+        //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage E data:{}, {}, {}", id, s, reader.getString());
 
         FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
         cache.getAllCommando2t().put(reader.getString(), s);

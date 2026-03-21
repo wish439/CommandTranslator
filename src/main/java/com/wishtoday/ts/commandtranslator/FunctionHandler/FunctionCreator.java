@@ -39,6 +39,7 @@ public class FunctionCreator {
         NioUtils.deleteDirectories(rootDirectoryPath);
         path = rootDirectoryPath.resolve("data");
         List<ExpandedMacro<ServerCommandSource>> functions = dataPack.functions;
+        Commandtranslator.LOGGER.info("Creating Function DataPack {} to {}", functions.toString(), rootDirectoryPath);
         if (functions.isEmpty()) {
             return;
         }
