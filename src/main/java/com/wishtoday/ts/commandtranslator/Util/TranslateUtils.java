@@ -13,11 +13,13 @@ public class TranslateUtils {
     public static Function<String, String> getDefaultTranslateStrategy(Config config, BatchTranslatorProcessor processor) {
         return s -> {
             if (LanguageUtils.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return s;
+            if (s.isBlank()) return s;
             try {
-                return processor
+                String join = processor
                         .submit(s)
-                        .completeOnTimeout(s, 4, TimeUnit.SECONDS)
+                        .completeOnTimeout(s, 15, TimeUnit.SECONDS)
                         .join();
+                return join;
             } catch (CompletionException e) {
                 Commandtranslator.LOGGER.error("Translate failed for '{}'", s, e.getCause());
                 return s;
@@ -31,6 +33,7 @@ public class TranslateUtils {
     public static Function<String, CompletableFuture<String>> getDefaultAsyncTranslateStrategy(Config config, BatchTranslatorProcessor processor) {
         return s -> {
             if (LanguageUtils.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return CompletableFuture.completedFuture(s);
+            //if (s.isBlank()) return CompletableFuture.completedFuture(s);
             return processor.submit(s);
         };
     }

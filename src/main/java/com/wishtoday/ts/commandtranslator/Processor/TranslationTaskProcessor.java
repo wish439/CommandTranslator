@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.UncheckedException;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Queue;
 import java.util.concurrent.*;
 
 public class TranslationTaskProcessor implements Processor<BlockEntity>{
@@ -51,7 +52,7 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
 
         this.server = server;
         this.dispatcher = server.getCommandManager().getDispatcher();
-        this.queue = new UniqueLinkedBlockingQueue<>();
+        this.queue = new LinkedBlockingQueue<>();
     }
 
     private final int executorSize;
@@ -59,17 +60,12 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
     private final ThreadPoolExecutor translateExecutor;
     private final MinecraftServer server;
     private final CommandDispatcher<ServerCommandSource> dispatcher;
-    private final UniqueLinkedBlockingQueue<BlockEntity> queue;
+    private final Queue<BlockEntity> queue;
 
 
     @Override
     public void submitTask(@NotNull BlockEntity blockEntityPos) {
-        try {
-            queue.put(blockEntityPos);
-        } catch (InterruptedException e) {
-            Commandtranslator.LOGGER.error("put {} failed {}", blockEntityPos , e );
-            throw new UncheckedException(e);
-        }
+        queue.add(blockEntityPos);
     }
 
     @Override
@@ -150,7 +146,7 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
                     );
                     if (finalOriginalCommand.equals(s)) return;
 
-                    Commandtranslator.LOGGER.info("submit the {} translated {}", finalOriginalCommand, s);
+                    Commandtranslator.LOGGER.info("submit the {} translated {}, CommandBlockPos:{}", finalOriginalCommand, s, commandBlock.getPos().toString());
                     server.execute(() -> commandExecutor.setCommand(s));
                     instance.getAllCommando2t().put(finalOriginalCommand, s);
                 })

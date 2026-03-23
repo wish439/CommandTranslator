@@ -90,7 +90,7 @@ public class BatchTranslatorProcessor implements FunctionProcessor<String, Compl
         }
         if (tasks.isEmpty()) return;
         List<String> list = tasks.stream().map(Task::getString).toList();
-        Commandtranslator.LOGGER.info("submit to translator:{}", list);
+
         List<String> translated = translator.translate(list);
         Commandtranslator.LOGGER.info("receive the translate:{}", translated);
         for (int i = 0; i < translated.size(); i++) {

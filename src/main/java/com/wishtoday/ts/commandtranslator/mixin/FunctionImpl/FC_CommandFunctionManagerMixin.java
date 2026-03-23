@@ -35,6 +35,8 @@ public class FC_CommandFunctionManagerMixin {
         FunctionCreatorManager instance = FunctionCreatorManager.getInstance();
         Set<Identifier> shouldCoverFunctions = instance.getShouldCoverFunctions();
 
+        System.out.println("shouldCoverFunctions:" + shouldCoverFunctions);
+
         List<ExpandedMacro<ServerCommandSource>> collect = map.entrySet().stream()
                 .filter(entry -> entry.getValue() instanceof ExpandedMacro<ServerCommandSource>)
                 .filter(entry -> shouldCoverFunctions.contains(entry.getKey()))

@@ -106,6 +106,7 @@ public class OpenAITranslator extends AITranslator implements IBatchTranslator {
     public List<String> translate(List<String> strings) {
         String json = gson.toJson(strings);
         String translation = this.translation(json);
+        Commandtranslator.LOGGER.info("submit to translator:{}", json);
         return gson.fromJson(translation, new TypeToken<>() {});
     }
 
