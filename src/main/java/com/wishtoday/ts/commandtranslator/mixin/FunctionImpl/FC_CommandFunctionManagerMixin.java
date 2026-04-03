@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +45,8 @@ public class FC_CommandFunctionManagerMixin {
                 .map(function -> (ExpandedMacro<ServerCommandSource>)function)
                 .collect(Collectors.toList());
         FunctionCreator creator = instance.getCreator();
-        creator.create(new FunctionCreator.FunctionDataPack(String.format("This is a cover datapack, generate by %s", Commandtranslator.MOD_ID), collect, Commandtranslator.DataPackName), server);
+        boolean b = creator.create(new FunctionCreator.FunctionDataPack(String.format("This is a cover datapack, generate by %s", Commandtranslator.MOD_ID), collect, Commandtranslator.DataPackName), server);
+        if (b) server.reloadResources(Collections.singleton(Commandtranslator.DataPackName));
         shouldCoverFunctions.clear();
     }
 }

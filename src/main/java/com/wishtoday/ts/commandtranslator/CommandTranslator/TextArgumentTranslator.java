@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import static com.wishtoday.ts.commandtranslator.Util.TextHandleUtils.*;
@@ -40,6 +41,29 @@ public class TextArgumentTranslator implements ArgumentTranslator<Text> {
             Text text,
             StringRange range,
             Function<String, CompletableFuture<String>> function
+    ) {
+        if (!(text.getContent() instanceof PlainTextContent content)) {
+            Commandtranslator.LOGGER.warn("TextArgumentTranslator.translateAsync: Text is not a PlainTextContent, will return null");
+            return CompletableFuture.completedFuture(null);
+        }
+        String plain = content.string();
+        List<Text> siblings = getAllSibLingsText(text, new ArrayList<>());
+        CompletableFuture<String> mainFuture = function.apply(plain);
+        CompletableFuture<List<Text>> siblingsFuture =
+                handleAllStringInTextAsync(siblings, function);
+        return mainFuture.thenCombine(siblingsFuture, (mainTranslated, handled) -> {
+            List<String> original = new ArrayList<>();
+            List<String> translated = new ArrayList<>();
+            return getTextTranslateResults(text, range, plain, siblings, mainTranslated, handled, original, translated);
+        });
+    }
+
+    @Override
+    public @NotNull CompletableFuture<TranslateResults<Text>> translateAsyncWithExecutor(
+            Text text,
+            StringRange range,
+            Function<String, CompletableFuture<String>> function,
+            Executor executor
     ) {
         if (!(text.getContent() instanceof PlainTextContent content)) {
             Commandtranslator.LOGGER.warn("TextArgumentTranslator.translateAsync: Text is not a PlainTextContent, will return null");

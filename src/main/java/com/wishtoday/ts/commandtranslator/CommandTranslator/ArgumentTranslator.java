@@ -14,4 +14,5 @@ public interface ArgumentTranslator<T> {
 
     @NotNull
     CompletableFuture<TranslateResults<T>> translateAsync(T value, StringRange range, Function<String, CompletableFuture<String>> o2nFunction);
+
 }

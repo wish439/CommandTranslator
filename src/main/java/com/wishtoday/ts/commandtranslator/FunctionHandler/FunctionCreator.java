@@ -3,6 +3,8 @@ package com.wishtoday.ts.commandtranslator.FunctionHandler;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Util.NioUtils;
 import lombok.Getter;
@@ -33,7 +35,7 @@ public class FunctionCreator {
     }
 
     @SuppressWarnings("UnstableApiUsage")
-    public void create(FunctionDataPack dataPack, MinecraftServer server) {
+    public boolean create(FunctionDataPack dataPack, MinecraftServer server) {
         Path path = server.getSavePath(WorldSavePath.DATAPACKS);
         Path rootDirectoryPath = path.resolve(dataPack.name);
         NioUtils.deleteDirectories(rootDirectoryPath);
@@ -41,15 +43,20 @@ public class FunctionCreator {
         List<ExpandedMacro<ServerCommandSource>> functions = dataPack.functions;
         Commandtranslator.LOGGER.info("Creating Function DataPack {} to {}", functions.toString(), rootDirectoryPath);
         if (functions.isEmpty()) {
-            return;
+            return false;
         }
         int processors = Math.min(functions.size(), Runtime.getRuntime().availableProcessors());
         List<List<ExpandedMacro<ServerCommandSource>>> partition = Lists.partition(functions, processors);
         try (ExecutorService executor = Executors.newFixedThreadPool(processors)) {
+            BooleanRef ref = new BooleanRef(true);
             CompletableFuture<Void> metaFuture = CompletableFuture.runAsync(() -> {
                 Path mcMetaPath = rootDirectoryPath.resolve("pack.mcmeta");
                 NioUtils.createFileAndWrite(mcMetaPath, ModResourcePackUtil.serializeMetadata(dataPack.packFormat, dataPack.description));
-            }, executor);
+            }, executor).exceptionally((t) -> {
+                Commandtranslator.LOGGER.error("threw an error when creating datapacks.", t);
+                ref.set(false);
+                return null;
+            });
             Path finalPath = path;
             List<CompletableFuture<Void>> collect = partition.stream()
                     .map(list -> CompletableFuture.runAsync(() -> list.forEach(macro -> {
@@ -57,10 +64,20 @@ public class FunctionCreator {
                         Path resolve = resolveFromID(id, finalPath);
 
                         NioUtils.createFileAndWrite(resolve, macro.entries().stream().map(Object::toString).collect(Collectors.joining("\n")));
-                    }), executor))
+                    }), executor).exceptionally((t) -> {
+                        Commandtranslator.LOGGER.error("threw an error when creating datapacks.", t);
+                        ref.set(false);
+                        return null;
+                    }))
                     .collect(Collectors.toList());
             collect.add(metaFuture);
-            CompletableFuture.allOf(collect.toArray(new CompletableFuture[0])).join();
+            CompletableFuture.allOf(collect.toArray(new CompletableFuture[0])).exceptionally(e -> {
+                        Commandtranslator.LOGGER.error("threw an error when creating datapacks.", e);
+                        ref.set(false);
+                        return null;
+                    })
+                    .join();
+            return ref.get();
         }
     }
 
@@ -105,6 +122,22 @@ public class FunctionCreator {
             this.functions = functions;
             this.name = name;
             //this.dataOutput = new DataOutput(server.getPath(String.valueOf(DataOutput.OutputType.DATA_PACK)));
+        }
+    }
+
+    private class BooleanRef {
+        private boolean value;
+
+        public BooleanRef(boolean value) {
+            this.value = value;
+        }
+
+        public boolean get() {
+            return value;
+        }
+
+        public void set(boolean value) {
+            this.value = value;
         }
     }
 }

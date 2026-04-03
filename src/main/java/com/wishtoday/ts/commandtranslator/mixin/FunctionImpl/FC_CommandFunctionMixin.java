@@ -76,13 +76,7 @@ public interface FC_CommandFunctionMixin {
         TranslateResults<?> translated = storage.translate(context, TranslateUtils.getDefaultTranslateStrategy(config, processor));
         if (translated == null) return original.call(dispatcher, source, reader);
 
-        String s;
-        try {
-            s = StringUtils.replaceEach(reader.getString(), translated.original(), translated.translated());
-        } catch (IllegalArgumentException e) {
-            Commandtranslator.LOGGER.error("StringUtils.replaceEach error: data:\"\"original:\"{}, \"translated:\"{}, \"Class\":{}\" exception:{}", translated.original(), translated.translated(), translated.getResult().getClass(), e);
-            return original.call(dispatcher, source, reader);
-        }
+        String s = StringUtils.replaceEach(reader.getString(), translated.original(), translated.translated());
         //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage D data:{}", s);
 
         if (reader.getString().equals(s)) return original.call(dispatcher, source, reader);
