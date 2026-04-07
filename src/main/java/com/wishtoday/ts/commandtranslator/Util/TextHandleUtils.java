@@ -6,6 +6,7 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -34,7 +35,7 @@ public class TextHandleUtils {
         for (Text sibling : siblings) {
             getAllSibLingsText(sibling, originalList);
         }
-        return originalList.stream().distinct().collect(Collectors.toList());
+        return Collections.synchronizedList(originalList.stream().distinct().collect(Collectors.toList()));
     }
 
     @NotNull

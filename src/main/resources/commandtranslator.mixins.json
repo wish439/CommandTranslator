@@ -12,6 +12,7 @@
     "CommandBlockImpl.CB_CommandManagerMixin",
     "FunctionImpl.FC_CommandFunctionManagerMixin",
     "FunctionImpl.FC_CommandFunctionMixin",
+    "FunctionImpl.FC_FunctionLoaderMixin",
     "TextNodeParserImpl.CommandDispatcherMixin",
     "TextNodeParserImpl.LiteralArgumentBuilderMixin"
   ],

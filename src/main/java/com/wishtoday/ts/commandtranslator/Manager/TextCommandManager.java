@@ -6,17 +6,18 @@ import lombok.Getter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TextCommandManager {
     @Getter
     private static final TextCommandManager INSTANCE = new TextCommandManager();
 
     private TextCommandManager() {
-        this.cacheTextNodeCommands = new HashMap<>();
-        this.textNodeCommands = new HashMap<>();
+        this.cacheTextNodeCommands = new ConcurrentHashMap<>();
+        this.textNodeCommands = new ConcurrentHashMap<>();
     }
-    private final HashMap<String, TextNodeTranslatorStorage<?>> textNodeCommands;
-    private final HashMap<String, TextNodeTranslatorStorage<?>> cacheTextNodeCommands;
+    private final Map<String, TextNodeTranslatorStorage<?>> textNodeCommands;
+    private final Map<String, TextNodeTranslatorStorage<?>> cacheTextNodeCommands;
 
     public Set<Map.Entry<String, TextNodeTranslatorStorage<?>>> cacheForEntry() {
         return this.cacheTextNodeCommands.entrySet();

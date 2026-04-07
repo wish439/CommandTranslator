@@ -3,8 +3,8 @@ package com.wishtoday.ts.commandtranslator.FunctionHandler;
 import lombok.Getter;
 import net.minecraft.util.Identifier;
 
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FunctionCreatorManager {
     @Getter
@@ -17,7 +17,7 @@ public class FunctionCreatorManager {
     private final Set<Identifier> shouldCoverFunctions;
 
     private FunctionCreatorManager() {
-        shouldCoverFunctions = new HashSet<>(10);
+        shouldCoverFunctions = ConcurrentHashMap.newKeySet(10);
         creator = new FunctionCreator();
     }
 }

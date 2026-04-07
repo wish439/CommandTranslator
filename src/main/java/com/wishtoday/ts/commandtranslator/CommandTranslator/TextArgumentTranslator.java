@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -43,11 +44,30 @@ public class TextArgumentTranslator implements ArgumentTranslator<Text> {
             Function<String, CompletableFuture<String>> function
     ) {
         if (!(text.getContent() instanceof PlainTextContent content)) {
-            Commandtranslator.LOGGER.warn("TextArgumentTranslator.translateAsync: Text is not a PlainTextContent, will return null");
-            return CompletableFuture.completedFuture(null);
+            Commandtranslator.LOGGER.warn("TextArgumentTranslator.translateAsync:The Text isn't a PlainTextContent");
+            return translateAsyncNotMain(text, range, function);
         }
+        return translateAsyncHasMain(text, range, function, content);
+        /*String plain = content.string();
+        List<Text> siblings = getAllSibLingsText(text, Collections.synchronizedList(new ArrayList<>()));
+        CompletableFuture<String> mainFuture = function.apply(plain);
+        CompletableFuture<List<Text>> siblingsFuture =
+                handleAllStringInTextAsync(siblings, function);
+        return mainFuture.thenCombine(siblingsFuture, (mainTranslated, handled) -> {
+            List<String> original = new ArrayList<>();
+            List<String> translated = new ArrayList<>();
+            return getTextTranslateResults(text, range, plain, siblings, mainTranslated, handled, original, translated);
+        });*/
+    }
+
+    private @NotNull CompletableFuture<TranslateResults<Text>> translateAsyncHasMain(
+            Text text,
+            StringRange range,
+            Function<String, CompletableFuture<String>> function,
+            PlainTextContent content
+    ) {
         String plain = content.string();
-        List<Text> siblings = getAllSibLingsText(text, new ArrayList<>());
+        List<Text> siblings = getAllSibLingsText(text, Collections.synchronizedList(new ArrayList<>()));
         CompletableFuture<String> mainFuture = function.apply(plain);
         CompletableFuture<List<Text>> siblingsFuture =
                 handleAllStringInTextAsync(siblings, function);
@@ -58,13 +78,32 @@ public class TextArgumentTranslator implements ArgumentTranslator<Text> {
         });
     }
 
+    private @NotNull CompletableFuture<TranslateResults<Text>> translateAsyncNotMain(
+            Text text,
+            StringRange range,
+            Function<String, CompletableFuture<String>> function
+    ) {
+        List<Text> siblings = getAllSibLingsText(text, Collections.synchronizedList(new ArrayList<>()));
+        CompletableFuture<List<Text>> siblingsFuture =
+                handleAllStringInTextAsync(siblings, function);
+        return siblingsFuture.thenApply(handled -> {
+            List<String> original = new ArrayList<>();
+            List<String> translated = new ArrayList<>();
+            return getTextTranslateResults(text, range, null, siblings, null, handled, original, translated);
+        });
+    }
+
     @NotNull
-    private TranslateResults<Text> getTextTranslateResults(Text text, StringRange range, String plain, List<Text> siblings, String mainTranslated, List<Text> handled, List<String> original, List<String> translated) {
-        original.add(formatStringToReplaceFormat(plain));
+    private TranslateResults<Text> getTextTranslateResults(Text text, StringRange range, @Nullable String plain, List<Text> siblings, @Nullable String mainTranslated, List<Text> handled, List<String> original, List<String> translated) {
+        if (plain != null) {
+            original.add(formatStringToReplaceFormat(plain));
+        }
         original.addAll(getStringsFromTexts(siblings).stream()
                 .map(this::formatStringToReplaceFormat).toList());
 
-        translated.add(formatStringToReplaceFormat(mainTranslated));
+        if (mainTranslated != null) {
+            translated.add(formatStringToReplaceFormat(mainTranslated));
+        }
         translated.addAll(getStringsFromTexts(handled).stream()
                 .map(this::formatStringToReplaceFormat).toList());
 

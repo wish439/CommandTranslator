@@ -46,7 +46,7 @@ public class FC_CommandFunctionManagerMixin {
                 .collect(Collectors.toList());
         FunctionCreator creator = instance.getCreator();
         boolean b = creator.create(new FunctionCreator.FunctionDataPack(String.format("This is a cover datapack, generate by %s", Commandtranslator.MOD_ID), collect, Commandtranslator.DataPackName), server);
-        if (b) server.reloadResources(Collections.singleton(Commandtranslator.DataPackName));
+        //if (b) server.reloadResources(Collections.singleton(Commandtranslator.DataPackName));
         shouldCoverFunctions.clear();
     }
 }

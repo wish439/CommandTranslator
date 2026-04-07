@@ -16,11 +16,12 @@ import com.wishtoday.ts.commandtranslator.Config.Config;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
 import com.wishtoday.ts.commandtranslator.FunctionHandler.FunctionCreatorManager;
+import com.wishtoday.ts.commandtranslator.Helper.BooleanCommandChecker;
+import com.wishtoday.ts.commandtranslator.Helper.CacheCommandChecker;
+import com.wishtoday.ts.commandtranslator.Helper.TextCommandChecker;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
 import com.wishtoday.ts.commandtranslator.Processor.BatchTranslatorProcessor;
 import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
-import com.wishtoday.ts.commandtranslator.Util.TranslateUtils;
-import lombok.SneakyThrows;
 import net.minecraft.command.SingleCommandAction;
 import net.minecraft.command.SourcedCommandAction;
 import net.minecraft.resource.Resource;
@@ -30,19 +31,19 @@ import net.minecraft.server.function.CommandFunction;
 import net.minecraft.server.function.FunctionBuilder;
 import net.minecraft.server.function.FunctionLoader;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Pair;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Mixin(FunctionLoader.class)
@@ -60,78 +61,33 @@ public abstract class FC_FunctionLoaderMixin {
     private CompletableFuture<CommandFunction<ServerCommandSource>> wrap(Supplier<CommandFunction<ServerCommandSource>> supplier, Executor executor, Operation<CompletableFuture<CommandFunction<ServerCommandSource>>> original, @Local Map.Entry<Identifier, Resource> entry, @Local ServerCommandSource source, @Local(ordinal = 1) Identifier identifier) {
         List<String> list = readLines(entry.getValue());
         if (list == null) return original.call(supplier, executor);
+        //System.out.println("triggered");
+
+        //try {
+          //  return create(identifier, commandDispatcher, source, list, executor);
+        //} catch (Exception e) {
+            //return original.call(supplier, executor);
+        //}
+        return CompletableFuture.supplyAsync(
+                        () -> create(identifier, commandDispatcher, source, list, executor),
+                        executor
+                ).thenCompose(f -> f)
+                .exceptionallyCompose(t -> {
+                    System.out.println("original.call(supplier, executor);");
+                    Commandtranslator.LOGGER.error("threw", t);
+                    return original.call(supplier, executor);
+                });
+    }
+
+    private CompletableFuture<CommandFunction<ServerCommandSource>> create(Identifier id, CommandDispatcher<ServerCommandSource> dispatcher, ServerCommandSource source, List<String> lines, Executor executor) throws IllegalArgumentException {
+        FunctionBuilder<ServerCommandSource> functionBuilder = null;
         try {
-            return CompletableFuture.supplyAsync(
-                    () -> create(identifier, commandDispatcher, source, list),
-                    executor
-            ).thenCompose(f -> f);
-        } catch (Exception e) {
-            return original.call(supplier, executor);
-        }
-    }
-
-    @Nullable
-    private static CompletableFuture<String> processAsync(String string, CommandDispatcher<ServerCommandSource> dispatcher, ServerCommandSource source, Identifier id) {
-        //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage -A");
-        if (!Commandtranslator.isModActive()) return null;
-        //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage -B");
-        Config config = Config.getInstance();
-        if (!config.isEnableTranslate() || !config.isTranslateFunctions()) return null;
-        ParseResults<ServerCommandSource> parse = dispatcher.parse(string, source);
-        CommandContextBuilder<ServerCommandSource> context = parse.getContext();
-        context = CommandParseUtils.changeToDeepest(context);
-
-        TextCommandManager manager = TextCommandManager.getINSTANCE();
-        CommandNode<ServerCommandSource> headNode = context.getNodes().getFirst().getNode();
-
-        //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage A data:{}", headNode);
-
-        if (!manager.containsCommand(headNode.getName())) return null;
-
-        TextNodeTranslatorStorage<?> storage = manager.getCommand(headNode.getName());
-
-        CacheInstance cache = CacheInstance.getINSTANCE();
-
-        if (cache.getAllCommando2t().containsValue(string)) {
-            FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
-            //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage B containsValue block data:{}", id);
-            return null;
+            functionBuilder = (FunctionBuilder<ServerCommandSource>) FunctionBuilder.class.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new IllegalArgumentException("CreateAsync Failed, Can't create FunctionBuilder");
         }
 
-        String value = cache.getAllCommando2t().getValue(string);
-        if (value != null) {
-            // Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage C value!=null data:{}:{}", id, value);
-            FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
-            return null;
-        }
-
-        //TranslateStringResults right = processor.replaceTheContextNodeAndGetTranslateResult();
-
-        BatchTranslatorProcessor processor = Commandtranslator.getProcessorWrapper().getWrapped();
-
-        CompletableFuture<? extends TranslateResults<?>> translated = storage.translateAsync(context, TranslateUtils.getDefaultAsyncTranslateStrategy(config, processor));
-        if (translated == null) return null;
-
-        return translated.thenApply(result -> {
-            String s = StringUtils.replaceEach(string, result.original(), result.translated());
-            //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage D data:{}", s);
-
-            if (string.equals(s)) return string;
-
-            //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage E data:{}, {}, {}", id, s, reader.getString());
-
-            FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
-            cache.getAllCommando2t().put(string, s);
-
-            return s;
-        });
-    }
-
-    @SneakyThrows
-    private CompletableFuture<CommandFunction<ServerCommandSource>> create(Identifier id, CommandDispatcher<ServerCommandSource> dispatcher, ServerCommandSource source, List<String> lines) {
-        FunctionBuilder<ServerCommandSource> functionBuilder = (FunctionBuilder<ServerCommandSource>) FunctionBuilder.class.getDeclaredConstructor().newInstance();
-
-        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        List<CompletableFuture<SourcedCommandAction<ServerCommandSource>>> futures = Collections.synchronizedList(new ArrayList<>());
 
         for (final int[] i = {0}; i[0] < lines.size(); i[0]++) {
             int j = i[0] + 1;
@@ -158,6 +114,9 @@ public abstract class FC_FunctionLoaderMixin {
             validateCommandLength(string3);
             StringReader stringReader = new StringReader(string3);
             CompletableFuture<SourcedCommandAction<ServerCommandSource>> parsed = null;
+            if ("execute unless score @s spectate matches 1.. if score @s pr.plot_x matches -1 if score @s pr.plot_z matches 0 unless score @s pr.plot = #spawn_plot pr.value run tellraw @s {\"text\":\"Your run has begun\",\"color\":\"gold\",\"type\":\"text\"}".equals(string3)) {
+                System.out.println("Accept stage 1");
+            }
             if (stringReader.canRead() && stringReader.peek() != '#') {
                 if (stringReader.peek() == '/') {
                     stringReader.skip();
@@ -175,22 +134,138 @@ public abstract class FC_FunctionLoaderMixin {
                     functionBuilder.addMacroCommand(string3.substring(1), j, source);
                 } else {
                     try {
-                        parsed = parseAsync(dispatcher, source, stringReader, id);
+                        if ("execute unless score @s spectate matches 1.. if score @s pr.plot_x matches -1 if score @s pr.plot_z matches 0 unless score @s pr.plot = #spawn_plot pr.value run tellraw @s {\"text\":\"Your run has begun\",\"color\":\"gold\",\"type\":\"text\"}".equals(string3)) {
+                            System.out.println("Accept stage 2");
+                        }
+                        parsed = parseAsync(dispatcher, source, stringReader, id, executor);
+                        if ("execute unless score @s spectate matches 1.. if score @s pr.plot_x matches -1 if score @s pr.plot_z matches 0 unless score @s pr.plot = #spawn_plot pr.value run tellraw @s {\"text\":\"Your run has begun\",\"color\":\"gold\",\"type\":\"text\"}".equals(string3)) {
+                            System.out.println("Accept stage 3");
+                            System.out.println(string3);
+                        }
+                        /*if (parsed == null) {
+                            //System.out.printf("End this method?A:%s, B:%s\n", j, string3);
+                            throw new IllegalArgumentException("CreateAsync Failed");
+                        }*/
+                        //CompletableFuture<Void> future = parsed.thenAcceptAsync(functionBuilder::addAction, executor);
+
+                        futures.add(parsed);
                     } catch (CommandSyntaxException var11) {
                         throw new IllegalArgumentException("Whilst parsing command on line " + j + ": " + var11.getMessage());
                     }
                 }
             }
-
-            if (parsed == null) throw new IllegalArgumentException("CreateAsync Failed");
-
-            CompletableFuture<Void> future = parsed.thenAccept(functionBuilder::addAction);
-
-            futures.add(future);
         }
 
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenApply(
-                v -> functionBuilder.toCommandFunction(id));
+        FunctionBuilder<ServerCommandSource> finalFunctionBuilder = functionBuilder;
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenApply(v -> {
+            for (CompletableFuture<SourcedCommandAction<ServerCommandSource>> f : futures) {
+                finalFunctionBuilder.addAction(f.join());
+            }
+            return finalFunctionBuilder.toCommandFunction(id);
+        });
+    }
+
+    private static @NotNull CompletableFuture<String> processAsync(String string, CommandDispatcher<ServerCommandSource> dispatcher, ServerCommandSource source, Identifier id, Executor executor) {
+        //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage -A");
+        if (!Commandtranslator.isModActive()) return CompletableFuture.completedFuture(string);
+        //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage -B");
+        Config config = Config.getInstance();
+        if (!config.isEnableTranslate() || !config.isTranslateFunctions()) return CompletableFuture.completedFuture(string);
+        ParseResults<ServerCommandSource> parse = dispatcher.parse(string, source);
+        TextCommandManager manager = TextCommandManager.getINSTANCE();
+        BooleanCommandChecker<TextCommandManager> textCommandChecker = new TextCommandChecker();
+        if ("execute unless score @s spectate matches 1.. if score @s pr.plot_x matches -1 if score @s pr.plot_z matches 0 unless score @s pr.plot = #spawn_plot pr.value run tellraw @s {\"text\":\"Your run has begun\",\"color\":\"gold\",\"type\":\"text\"}".equals(string)) {
+            System.out.println("Accept stage 5");
+        }
+        if (!textCommandChecker.check(parse, string, manager)) return CompletableFuture.completedFuture(string);
+        CommandContextBuilder<ServerCommandSource> context = parse.getContext();
+        /*CommandContextBuilder<ServerCommandSource> context = parse.getContext();
+        context = CommandParseUtils.changeToDeepest(context);
+
+        TextCommandManager manager = TextCommandManager.getINSTANCE();
+        CommandNode<ServerCommandSource> headNode = context.getNodes().getFirst().getNode();
+
+        //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage A data:{}", headNode);
+
+        if (!manager.containsCommand(headNode.getName())) return null;*/
+        context = CommandParseUtils.changeToDeepest(context);
+
+        CommandNode<ServerCommandSource> headNode = context.getNodes().getFirst().getNode();
+
+        CacheInstance cache = CacheInstance.getINSTANCE();
+
+        /*if (cache.getAllCommando2t().containsValue(string)) {
+            FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
+            //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage B containsValue block data:{}", id);
+            return null;
+        }
+
+        String value = cache.getAllCommando2t().getValue(string);
+        if (value != null) {
+            // Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage C value!=null data:{}:{}", id, value);
+            FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
+            return null;
+        }*/
+
+        CacheCommandChecker checker = new CacheCommandChecker();
+
+        Pair<Boolean, String> check = checker.check(context, string, cache);
+        if (!check.getLeft()) {
+            FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
+            if (check.getRight() != null) {
+                return CompletableFuture.completedFuture(check.getRight());
+            }
+            return CompletableFuture.completedFuture(string);
+        }
+        if ("execute unless score @s spectate matches 1.. if score @s pr.plot_x matches -1 if score @s pr.plot_z matches 0 unless score @s pr.plot = #spawn_plot pr.value run tellraw @s {\"text\":\"Your run has begun\",\"color\":\"gold\",\"type\":\"text\"}".equals(string)) {
+            System.out.println("Accept stage 6");
+        }
+
+        //TranslateStringResults right = processor.replaceTheContextNodeAndGetTranslateResult();
+
+        BatchTranslatorProcessor processor = Commandtranslator.getProcessorWrapper().getWrapped();
+
+        if ("execute unless score @s spectate matches 1.. if score @s pr.plot_x matches -1 if score @s pr.plot_z matches 0 unless score @s pr.plot = #spawn_plot pr.value run tellraw @s {\"text\":\"Your run has begun\",\"color\":\"gold\",\"type\":\"text\"}".equals(string)) {
+            manager.getTextNodeCommands().stream().map(Map.Entry::getKey).forEach(System.out::println);
+            System.out.println(headNode.getName());
+        }
+
+        TextNodeTranslatorStorage<?> storage = manager.getCommand(headNode.getName());
+
+        if (storage == null) return CompletableFuture.completedFuture(string);
+        if ("execute unless score @s spectate matches 1.. if score @s pr.plot_x matches -1 if score @s pr.plot_z matches 0 unless score @s pr.plot = #spawn_plot pr.value run tellraw @s {\"text\":\"Your run has begun\",\"color\":\"gold\",\"type\":\"text\"}".equals(string)) {
+            System.out.println("Accept stage 9");
+        }
+        //CompletableFuture<? extends TranslateResults<?>> translated = storage.translateAsync(context, TranslateUtils.getDefaultAsyncTranslateStrategy(config, processor));
+        Function<String, CompletableFuture<String>> listener = s -> CompletableFuture.completedFuture("HelloWorld");
+        //System.out.println("Into listener" + string);
+        CompletableFuture<? extends TranslateResults<?>> translated = storage.translateAsync(context, listener);
+        if (translated == null) return CompletableFuture.completedFuture(string);
+
+        if ("execute unless score @s spectate matches 1.. if score @s pr.plot_x matches -1 if score @s pr.plot_z matches 0 unless score @s pr.plot = #spawn_plot pr.value run tellraw @s {\"text\":\"Your run has begun\",\"color\":\"gold\",\"type\":\"text\"}".equals(string)) {
+            System.out.println("Accept stage 10");
+        }
+        return translated.thenApply(result -> {
+            if ("execute unless score @s spectate matches 1.. if score @s pr.plot_x matches -1 if score @s pr.plot_z matches 0 unless score @s pr.plot = #spawn_plot pr.value run tellraw @s {\"text\":\"Your run has begun\",\"color\":\"gold\",\"type\":\"text\"}".equals(string)) {
+                System.out.println("Accept stage 7");
+            }
+            if (result == null) return string;
+            String s = StringUtils.replaceEach(string, result.original(), result.translated());
+            //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage D data:{}", s);
+
+            //System.out.println("processAsync processed:" + s);
+            if (string.equals(s)) return string;
+
+            if ("execute unless score @s spectate matches 1.. if score @s pr.plot_x matches -1 if score @s pr.plot_z matches 0 unless score @s pr.plot = #spawn_plot pr.value run tellraw @s {\"text\":\"Your run has begun\",\"color\":\"gold\",\"type\":\"text\"}".equals(string)) {
+                System.out.println("Accept stage 8");
+            }
+            //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage E data:{}, {}, {}", id, s, reader.getString());
+
+            FunctionCreatorManager.getInstance().getShouldCoverFunctions().add(id);
+            cache.getAllCommando2t().put(string, s);
+
+            return s;
+        });
     }
 
     private static void validateCommandLength(CharSequence command) {
@@ -205,16 +280,32 @@ public abstract class FC_FunctionLoaderMixin {
         return i > 0 && string.charAt(i - 1) == '\\';
     }
 
-    private static CompletableFuture<SourcedCommandAction<ServerCommandSource>> parseAsync(CommandDispatcher<ServerCommandSource> dispatcher, ServerCommandSource source, StringReader reader, Identifier id) throws CommandSyntaxException {
-        CompletableFuture<String> future = processAsync(reader.getString(), dispatcher, source, id);
-        CompletableFuture<SourcedCommandAction<ServerCommandSource>> apply =  future.thenApply(s -> {
+    @NotNull
+    private static CompletableFuture<SourcedCommandAction<ServerCommandSource>> parseAsync(CommandDispatcher<ServerCommandSource> dispatcher, ServerCommandSource source, StringReader reader, Identifier id, Executor executor) throws CommandSyntaxException {
+        if ("execute unless score @s spectate matches 1.. if score @s pr.plot_x matches -1 if score @s pr.plot_z matches 0 unless score @s pr.plot = #spawn_plot pr.value run tellraw @s {\"text\":\"Your run has begun\",\"color\":\"gold\",\"type\":\"text\"}".equals(reader.getString())) {
+            System.out.println("Accept stage 4");
+        }
+        CompletableFuture<String> future = processAsync(reader.getString(), dispatcher, source, id, executor);
+        if (future == null) {
+            return CompletableFuture.completedFuture(CommandFunction.parse(dispatcher, source, reader));
+            //return null;
+        }
+        CompletableFuture<SourcedCommandAction<ServerCommandSource>> apply = future.thenApply(s -> {
+            if (s == null) {
+                try {
+                    throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().create();
+                } catch (CommandSyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             ParseResults<ServerCommandSource> parseResults = dispatcher.parse(s, source);
             try {
                 CommandManager.throwException(parseResults);
             } catch (CommandSyntaxException e) {
                 throw new RuntimeException(e);
             }
-            Optional<ContextChain<ServerCommandSource>> optional = ContextChain.tryFlatten(parseResults.getContext().build(reader.getString()));
+            //Optional<ContextChain<ServerCommandSource>> optional = ContextChain.tryFlatten(parseResults.getContext().build(reader.getString()));
+            Optional<ContextChain<ServerCommandSource>> optional = ContextChain.tryFlatten(parseResults.getContext().build(s));
             if (optional.isEmpty()) {
                 try {
                     throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().createWithContext(parseResults.getReader());
@@ -222,9 +313,12 @@ public abstract class FC_FunctionLoaderMixin {
                     throw new RuntimeException(e);
                 }
             } else {
-                return (SourcedCommandAction<ServerCommandSource>) new SingleCommandAction.Sourced<>(reader.getString(), optional.get());
+                return (SourcedCommandAction<ServerCommandSource>) new SingleCommandAction.Sourced<>(s, optional.get());
             }
-        }).exceptionally(t -> {throw new RuntimeException(t);});
+        }).exceptionally(t -> {
+            //System.out.println("Exception caught while trying to parse the command line: ?:" + "original command:" + reader.getString());
+            throw new RuntimeException(t);
+        });
         return apply;
     }
 }

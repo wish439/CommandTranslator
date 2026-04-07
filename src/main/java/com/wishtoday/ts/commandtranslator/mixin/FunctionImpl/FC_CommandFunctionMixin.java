@@ -34,6 +34,7 @@ public interface FC_CommandFunctionMixin {
             , StringReader reader
             , Operation<SourcedCommandAction<T>> original
             , @Local(argsOnly = true) Identifier id) {
+        if (true) return original.call(dispatcher, source, reader);
         //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage -A");
         if (!Commandtranslator.isModActive()) return original.call(dispatcher, source, reader);
         //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage -B");
