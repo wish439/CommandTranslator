@@ -28,6 +28,7 @@ import static com.wishtoday.ts.commandtranslator.Util.TextHandleUtils.*;
 import static com.wishtoday.ts.commandtranslator.Util.CommandParseUtils.*;
 import static com.wishtoday.ts.commandtranslator.Util.TextHandleUtils.getStringsFromTexts;
 
+@Deprecated
 public class TextCommandProcessor {
     private CommandContextBuilder<ServerCommandSource> context;
     private CommandDispatcher<ServerCommandSource> dispatcher;

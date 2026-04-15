@@ -2,7 +2,7 @@ package com.wishtoday.ts.commandtranslator.Data;
 
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.ParsedArgument;
-import com.wishtoday.ts.commandtranslator.CommandTranslator.ArgumentTranslator;
+import com.wishtoday.ts.commandtranslator.Helper.CommandTranslator.ArgumentTranslator;
 import net.minecraft.server.command.AbstractServerCommandSource;
 
 import java.util.concurrent.CompletableFuture;

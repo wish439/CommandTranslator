@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.CommandTranslator;
+package com.wishtoday.ts.commandtranslator.Helper.CommandTranslator;
 
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.context.StringRange;
@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import static com.wishtoday.ts.commandtranslator.Util.TextHandleUtils.*;

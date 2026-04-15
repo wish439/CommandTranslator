@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
+@Deprecated
 public class CommandNodeFinder {
     public static SelectStateImpl withContext(CommandContextBuilder<ServerCommandSource> context) {
         return new SelectStateImpl(context);

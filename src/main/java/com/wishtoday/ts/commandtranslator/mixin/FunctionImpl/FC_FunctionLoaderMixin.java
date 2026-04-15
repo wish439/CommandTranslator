@@ -8,6 +8,7 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.ContextChain;
+import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.CommandNode;
 import com.wishtoday.ts.commandtranslator.Cache.CacheInstance;
@@ -18,6 +19,7 @@ import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
 import com.wishtoday.ts.commandtranslator.FunctionHandler.FunctionCreatorManager;
 import com.wishtoday.ts.commandtranslator.Helper.BooleanCommandChecker;
 import com.wishtoday.ts.commandtranslator.Helper.CacheCommandChecker;
+import com.wishtoday.ts.commandtranslator.Helper.Stringer.Stringer;
 import com.wishtoday.ts.commandtranslator.Helper.TextCommandChecker;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
 import com.wishtoday.ts.commandtranslator.Processor.BatchTranslatorProcessor;
@@ -240,6 +242,7 @@ public abstract class FC_FunctionLoaderMixin {
         Function<String, CompletableFuture<String>> listener = s -> CompletableFuture.completedFuture("HelloWorld");
         //System.out.println("Into listener" + string);
         CompletableFuture<? extends TranslateResults<?>> translated = storage.translateAsync(context, listener);
+        StringRange range = context.getArguments().get(storage.argumentName()).getRange();
         if (translated == null) return CompletableFuture.completedFuture(string);
 
         if ("execute unless score @s spectate matches 1.. if score @s pr.plot_x matches -1 if score @s pr.plot_z matches 0 unless score @s pr.plot = #spawn_plot pr.value run tellraw @s {\"text\":\"Your run has begun\",\"color\":\"gold\",\"type\":\"text\"}".equals(string)) {
@@ -250,7 +253,12 @@ public abstract class FC_FunctionLoaderMixin {
                 System.out.println("Accept stage 7");
             }
             if (result == null) return string;
-            String s = StringUtils.replaceEach(string, result.original(), result.translated());
+            //String s = StringUtils.replaceEach(string, result.original(), result.translated());
+            String before = string.substring(0, range.getStart());
+            String after = string.substring(range.getEnd());
+            String middle = Stringer.toStringFrom(result.getResult());
+            String s = before + middle + after;
+            System.out.println(s);
             //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage D data:{}", s);
 
             //System.out.println("processAsync processed:" + s);

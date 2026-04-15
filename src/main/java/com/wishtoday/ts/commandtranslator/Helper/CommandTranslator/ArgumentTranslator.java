@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.CommandTranslator;
+package com.wishtoday.ts.commandtranslator.Helper.CommandTranslator;
 
 import com.mojang.brigadier.context.StringRange;
 import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
@@ -14,5 +14,4 @@ public interface ArgumentTranslator<T> {
 
     @NotNull
     CompletableFuture<TranslateResults<T>> translateAsync(T value, StringRange range, Function<String, CompletableFuture<String>> o2nFunction);
-
 }

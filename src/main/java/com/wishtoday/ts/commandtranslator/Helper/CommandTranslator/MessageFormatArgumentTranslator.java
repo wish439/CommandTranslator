@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.CommandTranslator;
+package com.wishtoday.ts.commandtranslator.Helper.CommandTranslator;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.StringRange;
