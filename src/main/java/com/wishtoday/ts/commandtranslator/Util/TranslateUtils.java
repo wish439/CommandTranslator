@@ -1,7 +1,9 @@
 package com.wishtoday.ts.commandtranslator.Util;
 
+import com.mojang.brigadier.context.StringRange;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Config.Config;
+import com.wishtoday.ts.commandtranslator.Helper.Stringer.Stringer;
 import com.wishtoday.ts.commandtranslator.Processor.BatchTranslatorProcessor;
 
 import java.util.concurrent.CompletableFuture;
@@ -13,6 +15,7 @@ public class TranslateUtils {
     public static Function<String, String> getDefaultTranslateStrategy(Config config, BatchTranslatorProcessor processor) {
         return s -> {
             if (LanguageUtils.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return s;
+            if (LanguageUtils.isOnlySymbols(s)) return s;
             if (s.isBlank()) return s;
             try {
                 String join = processor
@@ -33,8 +36,16 @@ public class TranslateUtils {
     public static Function<String, CompletableFuture<String>> getDefaultAsyncTranslateStrategy(Config config, BatchTranslatorProcessor processor) {
         return s -> {
             if (LanguageUtils.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return CompletableFuture.completedFuture(s);
+            if (LanguageUtils.isOnlySymbols(s)) return CompletableFuture.completedFuture(s);
             //if (s.isBlank()) return CompletableFuture.completedFuture(s);
             return processor.submit(s);
         };
+    }
+
+    public static <T> String getReplacedCommand(String original, StringRange range, T result) {
+        String before = original.substring(0, range.getStart());
+        String after = original.substring(range.getEnd());
+        String middle = Stringer.toStringFrom(result);
+        return before + middle + after;
     }
 }

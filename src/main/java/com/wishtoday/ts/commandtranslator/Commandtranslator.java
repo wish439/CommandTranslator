@@ -1,8 +1,6 @@
 package com.wishtoday.ts.commandtranslator;
 
-import com.wishtoday.ts.commandtranslator.Cache.CacheInstance;
-import com.wishtoday.ts.commandtranslator.Cache.DataSaver;
-import com.wishtoday.ts.commandtranslator.Cache.JsonSaver;
+import com.wishtoday.ts.commandtranslator.Cache.*;
 import com.wishtoday.ts.commandtranslator.Processor.*;
 import com.wishtoday.ts.commandtranslator.Translator.TranslatorFactory;
 import com.wishtoday.ts.commandtranslator.Config.Config;
@@ -26,6 +24,8 @@ public class Commandtranslator implements ModInitializer {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(Commandtranslator.class);
     public static DataSaver dataSaver;
+    @Getter
+    private static CacheService cacheService;
 
     public static final String MOD_ID = "commandtranslator";
 
@@ -56,6 +56,7 @@ public class Commandtranslator implements ModInitializer {
                 .model(config.getModel())
                 .build().getTranslator(config.getType());
 
+
         processorWrapper = new BatchTranslatorProcessorWrapper(new BatchTranslatorProcessor(config.getBatchSize(), config.getTimeout(), translator));
 
         dataSaver = new JsonSaver();
@@ -65,6 +66,7 @@ public class Commandtranslator implements ModInitializer {
         ScheduledExecutorService service2 = Executors.newScheduledThreadPool(1);
         service2.scheduleWithFixedDelay(() -> processorWrapper.getWrapped().tick(), 10, 10, TimeUnit.MILLISECONDS);
 
+        cacheService = new CacheServiceImpl(CacheInstance.getINSTANCE());
         this.registerProcessor();
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             service.scheduleWithFixedDelay(runnable, 30, 60, TimeUnit.SECONDS);

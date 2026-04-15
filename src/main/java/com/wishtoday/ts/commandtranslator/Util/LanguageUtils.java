@@ -25,4 +25,30 @@ public class LanguageUtils {
 
         return ((double) han / total) > range;
     }
+
+    public static boolean isOnlySymbols(String str) {
+        if (str == null || str.isEmpty()) {
+            return true;
+        }
+
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            if (isSemanticCharacter(c)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isSemanticCharacter(char c) {
+        if (Character.isLetterOrDigit(c)) {
+            return true;
+        }
+
+        Character.UnicodeScript script = Character.UnicodeScript.of(c);
+        return script == Character.UnicodeScript.HAN
+                || script == Character.UnicodeScript.HIRAGANA
+                || script == Character.UnicodeScript.KATAKANA
+                || script == Character.UnicodeScript.HANGUL;
+    }
 }

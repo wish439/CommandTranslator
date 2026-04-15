@@ -1,5 +1,6 @@
 package com.wishtoday.ts.commandtranslator.Config;
 
+import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Config.Annotation.Comment;
 import com.wishtoday.ts.commandtranslator.Config.Annotation.Range;
 import com.wishtoday.ts.commandtranslator.Config.Annotation.SerializedName;
@@ -103,6 +104,18 @@ public class Config {
         }
     }
 
+    @SuppressWarnings("UnnecessaryDefault")
+    public boolean canWorkOn(Environment environment) {
+        if (!enableTranslate) {
+            return false;
+        }
+        return switch (environment) {
+            case COMMAND_BLOCK -> this.translateCommandBlocks;
+            case FUNCTION -> this.translateFunctions;
+            default -> false;
+        };
+    }
+
     @Override
     public String toString() {
         return "Config{" +
@@ -178,5 +191,10 @@ public class Config {
     public enum CommandBlockTranslateStrategy {
         TRIGGER,
         LOADING
+    }
+
+    public enum Environment {
+        COMMAND_BLOCK,
+        FUNCTION
     }
 }
