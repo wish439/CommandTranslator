@@ -1,6 +1,12 @@
 package com.wishtoday.ts.commandtranslator;
 
 import com.wishtoday.ts.commandtranslator.Cache.*;
+import com.wishtoday.ts.commandtranslator.Config.Adapter.AnnotationAdapter.CommentAdapter;
+import com.wishtoday.ts.commandtranslator.Config.Adapter.AnnotationAdapter.RangeAdapter;
+import com.wishtoday.ts.commandtranslator.Config.Adapter.TypeAdapter.*;
+import com.wishtoday.ts.commandtranslator.Config.Annotation.Comment;
+import com.wishtoday.ts.commandtranslator.Config.Annotation.Range;
+import com.wishtoday.ts.commandtranslator.Config.IConfigLoader;
 import com.wishtoday.ts.commandtranslator.Processor.*;
 import com.wishtoday.ts.commandtranslator.Translator.TranslatorFactory;
 import com.wishtoday.ts.commandtranslator.Config.Config;
@@ -12,7 +18,6 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.world.level.storage.LevelStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +31,8 @@ public class Commandtranslator implements ModInitializer {
     public static DataSaver dataSaver;
     @Getter
     private static CacheService cacheService;
+    @Getter
+    private static IConfigLoader<Config> configLoader;
 
     public static final String MOD_ID = "commandtranslator";
 
@@ -45,6 +52,11 @@ public class Commandtranslator implements ModInitializer {
     public void onInitialize() {
 
         //if (loadConfig()) return;
+
+        configLoader = new ConfigLoader<>();
+
+        this.registerAnnotationAdapters();
+        this.registerFieldTypeAdapters();
 
         reload();
 
@@ -74,17 +86,24 @@ public class Commandtranslator implements ModInitializer {
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> runnable.run());
         this.registerEvents();
+    }
 
-        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-            System.out.println("server started");
-        });
+    private void registerAnnotationAdapters() {
+        configLoader.registerAnnotationAdapter(Comment.class, new CommentAdapter());
+        configLoader.registerAnnotationAdapter(Range.class, new RangeAdapter());
+    }
 
+    private void registerFieldTypeAdapters() {
+        configLoader.registerFieldTypeAdapter(new SimpleFieldTypeAdapter());
+        configLoader.registerFieldTypeAdapter(new EnumFieldTypeAdapter());
+        configLoader.registerFieldTypeAdapter(new NullFieldTypeAdapter());
+        configLoader.registerFieldTypeAdapter(new ObjectTypeAdapter());
     }
 
     public static void reload() {
         Config load;
         try {
-            load = ConfigLoader.load(Config::new, FabricLoader.getInstance().getConfigDir().resolve(CONFIG_FILE_NAME));
+            load = configLoader.load(Config::new, FabricLoader.getInstance().getConfigDir().resolve(CONFIG_FILE_NAME));
         } catch (Exception e) {
             return;
         }
