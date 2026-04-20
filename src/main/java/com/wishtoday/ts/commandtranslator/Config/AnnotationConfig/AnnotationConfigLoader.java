@@ -1,13 +1,15 @@
-package com.wishtoday.ts.commandtranslator.Config;
+package com.wishtoday.ts.commandtranslator.Config.AnnotationConfig;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
-import com.wishtoday.ts.commandtranslator.Config.Adapter.AnnotationAdapter.AnnotationAdapter;
-import com.wishtoday.ts.commandtranslator.Config.Adapter.AnnotationAdapter.AnnotationInfo;
-import com.wishtoday.ts.commandtranslator.Config.Adapter.AnnotationAdapter.ClassInfo;
-import com.wishtoday.ts.commandtranslator.Config.Adapter.AnnotationAdapter.FieldInfo;
-import com.wishtoday.ts.commandtranslator.Config.Adapter.TypeAdapter.FieldTypeAdapter;
-import com.wishtoday.ts.commandtranslator.Config.Annotation.SerializedName;
+import com.wishtoday.ts.commandtranslator.Config.*;
+import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.AnnotationAdapter.AnnotationAdapter;
+import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.TypeAdapter.FieldTypeAdapter;
+import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.SerializedName;
+import com.wishtoday.ts.commandtranslator.Data.Configs.AnnotationInfo;
+import com.wishtoday.ts.commandtranslator.Data.Configs.ConfigClassInfo;
+import com.wishtoday.ts.commandtranslator.Data.Configs.ConfigFieldInfo;
+import com.wishtoday.ts.commandtranslator.Data.Configs.ProcessingContext;
 import org.apache.commons.lang3.exception.UncheckedException;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -23,16 +25,20 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-public class ConfigLoader<T> implements IConfigLoader<T> {
+public class AnnotationConfigLoader<T> implements IConfigLoader<T> {
+
+
+
+    public AnnotationConfigLoader(Map<Class<? extends Annotation>, AnnotationAdapter<? extends Annotation>> annotationAdapters, Set<FieldTypeAdapter<?>> fieldTypeAdapters) {
+        this.annotationAdapters = annotationAdapters;
+        this.fieldTypeAdapters = fieldTypeAdapters;
+    }
 
     private final Map<Class<?>, List<Field>> fields = new ConcurrentHashMap<>();
 
-    private final Map<Class<? extends Annotation>, AnnotationAdapter<? extends Annotation>> annotationAdapters = new ConcurrentHashMap<>();
+    private final Map<Class<? extends Annotation>, AnnotationAdapter<? extends Annotation>> annotationAdapters;
 
-    private final Set<FieldTypeAdapter<?>> fieldTypeAdapters = new TreeSet<>(
-            Comparator.<FieldTypeAdapter<?>>comparingInt(FieldTypeAdapter::priority)
-                    .thenComparing(a -> a.getClass().getName())
-    );
+    private final Set<FieldTypeAdapter<?>> fieldTypeAdapters;
     @Override
     public T load(Supplier<T> supplier, Path path) {
 
@@ -54,22 +60,9 @@ public class ConfigLoader<T> implements IConfigLoader<T> {
             return instance;
         } catch (Exception e) {
             Commandtranslator.setModActive(false);
-            Commandtranslator.LOGGER.error("ConfigLoader#load threw{}", e.getMessage());
+            Commandtranslator.LOGGER.error("ConfigLoader#load loading failed, threw{}", e.getMessage());
             throw new UncheckedException(e);
         }
-    }
-
-    @Override
-    public <A extends Annotation> void registerAnnotationAdapter(Class<A> clazz, AnnotationAdapter<A> annotationAdapter) {
-        if (!clazz.isAssignableFrom(annotationAdapter.getAnnotationClass())) {
-            throw new IllegalArgumentException(annotationAdapter.getAnnotationClass() + " is not assignable to " + clazz);
-        }
-        this.annotationAdapters.put(annotationAdapter.getAnnotationClass(), annotationAdapter);
-    }
-
-    @Override
-    public <A> void registerFieldTypeAdapter(FieldTypeAdapter<A> fieldTypeAdapter) {
-        this.fieldTypeAdapters.add(fieldTypeAdapter);
     }
 
     public void loadFields(CommentedFileConfig config, Object obj, String prefix)
@@ -81,6 +74,8 @@ public class ConfigLoader<T> implements IConfigLoader<T> {
         }
 
         List<Field> list = fields.get(aClass);
+
+        ProcessingContext context = new ProcessingContext(config, this::loadFields);
 
         OUTSIDE:
         for (Field field : list) {
@@ -96,7 +91,7 @@ public class ConfigLoader<T> implements IConfigLoader<T> {
 
 
             /*for (Map.Entry<Class<? extends Annotation>, AnnotationAdapter<? extends Annotation>> entry : annotationAdapters.entrySet()) {
-                AnnotationInfo<?, Comment> info = new AnnotationInfo<>(key, value, field, comment, new ClassInfo<>(obj.getClass().getName(), obj, obj.getClass()));
+                AnnotationInfo<?, Comment> info = new AnnotationInfo<>(key, value, field, comment, new ConfigClassInfo<>(obj.getClass().getName(), obj, obj.getClass()));
                 AnnotationAdapter<? extends Annotation> adapter = entry.getValue();
                 adapter.apply(config, info);
             }*/
@@ -107,7 +102,7 @@ public class ConfigLoader<T> implements IConfigLoader<T> {
                 config.setComment(key, filterUnblank("\n", comment.value()));
             }
 
-            if (isSimpleType(type)) {
+            if (isSimpleType(instance)) {
 
                 if (!config.contains(key)) {
                     config.set(key, value);
@@ -117,18 +112,18 @@ public class ConfigLoader<T> implements IConfigLoader<T> {
 
                 Range range = field.getAnnotation(Range.class);
                 if (range != null && read instanceof Number n) {
-                    read = clampNumber(n, range, type);
+                    read = clampNumber(n, range, instance);
                 }
 
-                if (type.isEnum() && read != null) {
-                    read = Enum.valueOf((Class<Enum>) type, read.toString());
+                if (instance.isEnum() && read != null) {
+                    read = Enum.valueOf((Class<Enum>) instance, read.toString());
                 }
 
                 field.set(obj, read);
                 continue;
             }*/
 
-            /*if (List.class.isAssignableFrom(type)) {
+            /*if (List.class.isAssignableFrom(instance)) {
 
                 if (!config.contains(key)) {
                     config.set(key, value);
@@ -140,18 +135,15 @@ public class ConfigLoader<T> implements IConfigLoader<T> {
             }*/
 
             for (FieldTypeAdapter<?> fieldTypeAdapter : this.fieldTypeAdapters) {
-                System.out.println("fieldTypeAdapter: " + fieldTypeAdapter.getClass().getName());
-                System.out.println("read:" + config.get(key));
-                FieldInfo<Object> objectFieldInfo = new FieldInfo<>(key, value, field, new ClassInfo<>(obj));
-                if (!fieldTypeAdapter.shouldApply(new ProcessingContext(config, this::loadFields), objectFieldInfo)) {
-                    System.out.println("matching failed");
+                ConfigFieldInfo<Object> objectConfigFieldInfo = new ConfigFieldInfo<>(key, value, field, new ConfigClassInfo<>(obj));
+                if (!fieldTypeAdapter.shouldApply(context, objectConfigFieldInfo)) {
                     continue;
                 }
                 if (!config.contains(key)) {
                     config.set(key, value);
                 }
-                Object read = fieldTypeAdapter.read(new ProcessingContext(config, this::loadFields), new FieldInfo<>(key, value, field, new ClassInfo<>(obj)));
-                fieldTypeAdapter.write(new ProcessingContext(config, this::loadFields), objectFieldInfo, read);
+                Object read = fieldTypeAdapter.read(context, new ConfigFieldInfo<>(key, value, field, new ConfigClassInfo<>(obj)));
+                fieldTypeAdapter.write(context, objectConfigFieldInfo, read);
 
                 Annotation[] annotations = field.getAnnotations();
                 INSIDE:
@@ -160,7 +152,7 @@ public class ConfigLoader<T> implements IConfigLoader<T> {
                     if (adapter == null) {
                         continue INSIDE;
                     }
-                    AnnotationInfo<?, Annotation> info = new AnnotationInfo<>(key, value, field, new ClassInfo<>(obj.getClass().getName(), obj, obj.getClass()), annotation);
+                    AnnotationInfo<?, Annotation> info = new AnnotationInfo<>(key, value, field, new ConfigClassInfo<>(obj.getClass().getName(), obj, obj.getClass()), annotation);
                     boolean apply = adapter.apply(config, info);
                     if (apply) {
                         continue OUTSIDE;
@@ -170,7 +162,7 @@ public class ConfigLoader<T> implements IConfigLoader<T> {
             }
 
             /*if (value == null) {
-                value = type.getDeclaredConstructor().newInstance();
+                value = instance.getDeclaredConstructor().newInstance();
                 field.set(obj, value);
             }*/
 
@@ -224,24 +216,24 @@ public class ConfigLoader<T> implements IConfigLoader<T> {
         return String.join(delimiter, list);
     }
 
-    private static Number clampNumber(Number value, Range range, Class<?> type) {
+    private static Number clampNumber(Number value, Range range, Class<?> instance) {
 
-        if (type == int.class || type == Integer.class) {
+        if (instance == int.class || instance == Integer.class) {
             int v = value.intValue();
             return Math.min(Math.max(range.minInt(), v), range.maxInt());
         }
 
-        if (type == long.class || type == Long.class) {
+        if (instance == long.class || instance == Long.class) {
             long v = value.longValue();
             return Math.min(Math.max(range.minLong(), v), range.maxLong());
         }
 
-        if (type == float.class || type == Float.class) {
+        if (instance == float.class || instance == Float.class) {
             float v = value.floatValue();
             return Math.min(Math.max(range.minFloat(), v), range.maxFloat());
         }
 
-        if (type == double.class || type == Double.class) {
+        if (instance == double.class || instance == Double.class) {
             double v = value.doubleValue();
             return Math.min(Math.max(range.minDouble(), v), range.maxDouble());
         }
@@ -249,19 +241,19 @@ public class ConfigLoader<T> implements IConfigLoader<T> {
         return value;
     }
 
-    private static boolean isSimpleType(Class<?> type) {
+    private static boolean isSimpleType(Class<?> instance) {
 
-        return type.isPrimitive()
-                || type == String.class
-                || Number.class.isAssignableFrom(type)
-                || type == Boolean.class
-                || type == Integer.class
-                || type == Long.class
-                || type == Double.class
-                || type == Float.class
-                || type == Short.class
-                || type == Byte.class
-                || type == Character.class
-                || type.isEnum();
+        return instance.isPrimitive()
+                || instance == String.class
+                || Number.class.isAssignableFrom(instance)
+                || instance == Boolean.class
+                || instance == Integer.class
+                || instance == Long.class
+                || instance == Double.class
+                || instance == Float.class
+                || instance == Short.class
+                || instance == Byte.class
+                || instance == Character.class
+                || instance.isEnum();
     }*/
 }

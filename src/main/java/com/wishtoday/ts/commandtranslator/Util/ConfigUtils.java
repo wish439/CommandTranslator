@@ -1,7 +1,8 @@
 package com.wishtoday.ts.commandtranslator.Util;
 
-import com.wishtoday.ts.commandtranslator.Config.Annotation.Range;
+import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.Range;
 
+import java.util.Arrays;
 import java.util.List;
 
 public final class ConfigUtils {
@@ -40,5 +41,13 @@ public final class ConfigUtils {
             return Math.min(Math.max(range.minDouble(), v), range.maxDouble());
         }
         return value;
+    }
+
+    public static String filterUnblank(String delimiter, String s) {
+        String[] split = s.split(delimiter);
+        List<String> list = Arrays.stream(split)
+                .filter(a -> !a.isBlank())
+                .toList();
+        return String.join(delimiter, list);
     }
 }

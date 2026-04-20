@@ -1,6 +1,7 @@
-package com.wishtoday.ts.commandtranslator.Config.Adapter.AnnotationAdapter;
+package com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.AnnotationAdapter;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
+import com.wishtoday.ts.commandtranslator.Data.Configs.AnnotationInfo;
 
 import java.lang.annotation.Annotation;
 
@@ -14,6 +15,6 @@ public interface AnnotationAdapter<T extends Annotation> {
             return false;
         }
         T t = getAnnotationClass().cast(annotationInfo.annotation());
-        return apply0(config, new AnnotationInfo<>(annotationInfo.field().key(), annotationInfo.field().value(), annotationInfo.field().field(), annotationInfo.field().classInfo(), t));
+        return apply0(config, new AnnotationInfo<>(annotationInfo.field().key(), annotationInfo.field().value(), annotationInfo.field().field(), annotationInfo.field().configClassInfo(), t));
     }
 }

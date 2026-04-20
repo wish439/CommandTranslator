@@ -66,19 +66,12 @@ public abstract class FC_FunctionLoaderMixin {
     private CompletableFuture<CommandFunction<ServerCommandSource>> wrap(Supplier<CommandFunction<ServerCommandSource>> supplier, Executor executor, Operation<CompletableFuture<CommandFunction<ServerCommandSource>>> original, @Local Map.Entry<Identifier, Resource> entry, @Local ServerCommandSource source, @Local(ordinal = 1) Identifier identifier) {
         List<String> list = readLines(entry.getValue());
         if (list == null) return original.call(supplier, executor);
-        //System.out.println("triggered");
-
-        //try {
-          //  return create(identifier, commandDispatcher, source, list, executor);
-        //} catch (Exception e) {
-            //return original.call(supplier, executor);
-        //}
         return CompletableFuture.supplyAsync(
                         () -> create(identifier, commandDispatcher, source, list, executor),
                         executor
                 ).thenCompose(f -> f)
                 .exceptionallyCompose(t -> {
-                    Commandtranslator.LOGGER.error("threw", t);
+                    Commandtranslator.LOGGER.error("threw ", t);
                     return original.call(supplier, executor);
                 });
     }
@@ -280,7 +273,7 @@ public abstract class FC_FunctionLoaderMixin {
             } catch (CommandSyntaxException e) {
                 throw new RuntimeException(e);
             }
-            //Optional<ContextChain<ServerCommandSource>> optional = ContextChain.tryFlatten(parseResults.getContext().build(reader.getString()));
+            //Optional<ContextChain<ServerCommandSource>> optional = ContextChain.tryFlatten(parseResults.getContext().buildAnnotationConfigLoader(reader.getString()));
             Optional<ContextChain<ServerCommandSource>> optional = ContextChain.tryFlatten(parseResults.getContext().build(s));
             if (optional.isEmpty()) {
                 try {

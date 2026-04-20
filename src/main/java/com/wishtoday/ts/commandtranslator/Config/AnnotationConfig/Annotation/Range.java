@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.Config.Annotation;
+package com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

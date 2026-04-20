@@ -1,16 +1,24 @@
 package com.wishtoday.ts.commandtranslator;
 
 import com.wishtoday.ts.commandtranslator.Cache.*;
-import com.wishtoday.ts.commandtranslator.Config.Adapter.AnnotationAdapter.CommentAdapter;
-import com.wishtoday.ts.commandtranslator.Config.Adapter.AnnotationAdapter.RangeAdapter;
-import com.wishtoday.ts.commandtranslator.Config.Adapter.TypeAdapter.*;
-import com.wishtoday.ts.commandtranslator.Config.Annotation.Comment;
-import com.wishtoday.ts.commandtranslator.Config.Annotation.Range;
+import com.wishtoday.ts.commandtranslator.Config.ABuilderConfig;
+import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.AnnotationAdapter.CommentAdapter;
+import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.AnnotationAdapter.NotDisplayInAdapter;
+import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.AnnotationAdapter.RangeAdapter;
+import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.AnnotationAdapter.TranslatableCommentAdapter;
+import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.TypeAdapter.*;
+import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.Comment;
+import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.NotDisplayIn;
+import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.Range;
+import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.TranslatableComment;
+import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude.AttitudeAdapter.TranslatableCommentAttitudeAdapter;
+import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude.TranslatableCommentAttitude;
+import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.BuilderConfigLoader;
+import com.wishtoday.ts.commandtranslator.Config.ConfigLoaderBuilder;
 import com.wishtoday.ts.commandtranslator.Config.IConfigLoader;
 import com.wishtoday.ts.commandtranslator.Processor.*;
 import com.wishtoday.ts.commandtranslator.Translator.TranslatorFactory;
 import com.wishtoday.ts.commandtranslator.Config.Config;
-import com.wishtoday.ts.commandtranslator.Config.ConfigLoader;
 import com.wishtoday.ts.commandtranslator.http.ITranslators;
 import lombok.Getter;
 import lombok.Setter;
@@ -53,10 +61,16 @@ public class Commandtranslator implements ModInitializer {
 
         //if (loadConfig()) return;
 
-        configLoader = new ConfigLoader<>();
+        configLoader = registerFieldTypeAdapters(
+                registerAnnotationAdapters(ConfigLoaderBuilder
+                .<Config>annotationConfigLoader())).buildAnnotationConfigLoader();
 
-        this.registerAnnotationAdapters();
-        this.registerFieldTypeAdapters();
+        IConfigLoader<ABuilderConfig> builderConfigLoader = ConfigLoaderBuilder
+                .<ABuilderConfig>builderConfigLoader()
+                        .registerAttitudeAdapter(TranslatableCommentAttitude.class, new TranslatableCommentAttitudeAdapter())
+                                .buildBuilderConfigLoader();
+
+        builderConfigLoader.load(ABuilderConfig::new, FabricLoader.getInstance().getConfigDir().resolve("testDir.toml"));
 
         reload();
 
@@ -88,16 +102,20 @@ public class Commandtranslator implements ModInitializer {
         this.registerEvents();
     }
 
-    private void registerAnnotationAdapters() {
-        configLoader.registerAnnotationAdapter(Comment.class, new CommentAdapter());
-        configLoader.registerAnnotationAdapter(Range.class, new RangeAdapter());
+    private <T> ConfigLoaderBuilder.AnnotationConfigLoaderStage<T> registerAnnotationAdapters(ConfigLoaderBuilder.AnnotationConfigLoaderStage<T> stage) {
+        stage.registerAnnotationAdapter(Comment.class, new CommentAdapter());
+        stage.registerAnnotationAdapter(Range.class, new RangeAdapter());
+        stage.registerAnnotationAdapter(TranslatableComment.class, new TranslatableCommentAdapter());
+        stage.registerAnnotationAdapter(NotDisplayIn.class, new NotDisplayInAdapter());
+        return stage;
     }
 
-    private void registerFieldTypeAdapters() {
-        configLoader.registerFieldTypeAdapter(new SimpleFieldTypeAdapter());
-        configLoader.registerFieldTypeAdapter(new EnumFieldTypeAdapter());
-        configLoader.registerFieldTypeAdapter(new NullFieldTypeAdapter());
-        configLoader.registerFieldTypeAdapter(new ObjectTypeAdapter());
+    private <T> ConfigLoaderBuilder.AnnotationConfigLoaderStage<T> registerFieldTypeAdapters(ConfigLoaderBuilder.AnnotationConfigLoaderStage<T> stage) {
+        stage.registerFieldTypeAdapter(new SimpleFieldTypeAdapter());
+        stage.registerFieldTypeAdapter(new EnumFieldTypeAdapter());
+        stage.registerFieldTypeAdapter(new NullFieldTypeAdapter());
+        stage.registerFieldTypeAdapter(new ObjectTypeAdapter());
+        return stage;
     }
 
     public static void reload() {
