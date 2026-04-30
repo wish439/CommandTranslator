@@ -13,7 +13,6 @@ import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.Ran
 import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.TranslatableComment;
 import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude.AttitudeAdapter.TranslatableCommentAttitudeAdapter;
 import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude.TranslatableCommentAttitude;
-import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.BuilderConfigLoader;
 import com.wishtoday.ts.commandtranslator.Config.ConfigLoaderBuilder;
 import com.wishtoday.ts.commandtranslator.Config.IConfigLoader;
 import com.wishtoday.ts.commandtranslator.Processor.*;

@@ -109,6 +109,10 @@ public class BuilderConfigLoader<T> implements IConfigLoader<T> {
         if (!config.contains(name)) {
             config.set(name, o);
         }
+        triggerPostWrite(configEntry, config, context, adapters, field, name, o);
+    }
+
+    private void triggerPostWrite(MutableConfigEntry<?, ?> configEntry, CommentedFileConfig config, WritingContext context, TreeSet<PriorityAttitude> adapters, Field field, String name, Object o) {
         for (PriorityAttitude adapter : adapters) {
             AttitudeAdapter<Attitude<?>> attitudeAdapter = (AttitudeAdapter<Attitude<?>>) ATTITUDES.get(adapter.attitude().getClass());
             attitudeAdapter.postWrite(configEntry, config, adapter.attitude(), new ConfigFieldInfo<>(name, o, field, new ConfigClassInfo<>(context.configObject)));
@@ -116,14 +120,21 @@ public class BuilderConfigLoader<T> implements IConfigLoader<T> {
     }
 
     private void writeObjectField(MutableConfigEntry<?, ?> configEntry, CommentedFileConfig config, WritingContext context) throws IllegalAccessException {
+        TreeSet<PriorityAttitude> adapters = configEntry.getAdapters();
         Field field = context.field();
         String prefix = context.prefix;
         String name = getName(configEntry, field);
         name = prefix.isEmpty() ? name : prefix + "." + name;
+
+        for (PriorityAttitude adapter : adapters) {
+            AttitudeAdapter<Attitude<?>> attitudeAdapter = (AttitudeAdapter<Attitude<?>>) ATTITUDES.get(adapter.attitude().getClass());
+            attitudeAdapter.preRead(configEntry, config, adapter.attitude());
+        }
         List<MutableConfigEntry<?, ?>> children = configEntry.getChildren();
         if (configEntry.getValue() == null) {
             configEntry.setValue(configEntry.getDefaultValue());
         }
+        triggerPostWrite(configEntry, config, context, adapters, field, name, config);
         for (MutableConfigEntry<?, ?> child : children) {
             this.writeField(child, config, context.withPrefix(name).withParentObject(configEntry.getValue()));
         }

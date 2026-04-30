@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class FunctionCreator {
@@ -48,7 +49,7 @@ public class FunctionCreator {
         int processors = Math.min(functions.size(), Runtime.getRuntime().availableProcessors());
         List<List<ExpandedMacro<ServerCommandSource>>> partition = Lists.partition(functions, processors);
         try (ExecutorService executor = Executors.newFixedThreadPool(processors)) {
-            BooleanRef ref = new BooleanRef(true);
+            AtomicBoolean ref = new AtomicBoolean(false);
             CompletableFuture<Void> metaFuture = CompletableFuture.runAsync(() -> {
                 Path mcMetaPath = rootDirectoryPath.resolve("pack.mcmeta");
                 NioUtils.createFileAndWrite(mcMetaPath, ModResourcePackUtil.serializeMetadata(dataPack.packFormat, dataPack.description));
@@ -122,22 +123,6 @@ public class FunctionCreator {
             this.functions = functions;
             this.name = name;
             //this.dataOutput = new DataOutput(server.getPath(String.valueOf(DataOutput.OutputType.DATA_PACK)));
-        }
-    }
-
-    private class BooleanRef {
-        private boolean value;
-
-        public BooleanRef(boolean value) {
-            this.value = value;
-        }
-
-        public boolean get() {
-            return value;
-        }
-
-        public void set(boolean value) {
-            this.value = value;
         }
     }
 }

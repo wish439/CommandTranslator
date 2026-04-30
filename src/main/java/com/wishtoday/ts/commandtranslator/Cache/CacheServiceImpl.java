@@ -1,7 +1,5 @@
 package com.wishtoday.ts.commandtranslator.Cache;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 
 public class CacheServiceImpl implements CacheService {
