@@ -12,12 +12,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OpenAITranslator extends AITranslator implements IBatchTranslator {
+public class OpenAITranslator implements ITranslators {
 
     private List<MessageInfo> messages;
+    private final AIModelInfo aiModelInfo;
+    private final ValidateInfo validateInfo;
 
     public OpenAITranslator(String api, String key, String model, int contextNumber) {
-        super(api, key, model, contextNumber);
         this.messages = new ArrayList<>();
         messages.add(new MessageInfo("system", """
                 你是一个Minecraft使用的翻译机器人,请联系上下文更好的翻译
@@ -27,28 +28,12 @@ public class OpenAITranslator extends AITranslator implements IBatchTranslator {
                 3.不翻译任何指令格式(如果有)
                 4.如果是json数组，请保持json格式
                 """));
+        this.aiModelInfo = new AIModelInfo(model, contextNumber);
+        this.validateInfo = new ValidateInfo(api, key);
     }
 
     public OpenAITranslator(String api, String key, String model) {
-        super(api, key, model);
-        this.messages = new ArrayList<>();
-        messages.add(new MessageInfo("system", """
-                你是一个Minecraft使用的翻译机器人,请联系上下文更好的翻译
-                请根据以下规则翻译:
-                1.只输出翻译结果，原因和思考过程不输出。
-                2.不翻译Minecraft术语。
-                3.不翻译任何指令格式(如果有)
-                4.如果是json数组，请保持json格式
-                """));
-    }
-
-    @Override
-    protected void limitContextList() {
-        if (messages.size() < this.contextNumber) return;
-        List<MessageInfo> newlist = new ArrayList<>();
-        newlist.add(messages.getFirst());
-        newlist.addAll(messages.subList(Math.max(1, messages.size() - this.contextNumber), messages.size()));
-        this.messages = newlist;
+        this(api, key, model, 20);
     }
 
     @NotNull
@@ -60,27 +45,27 @@ public class OpenAITranslator extends AITranslator implements IBatchTranslator {
         requestMessages.add(new MessageInfo("user", "请翻译为" + language + "，只输出翻译：\n" + s));
 
         TranslationRequest translationRequest =
-                new TranslationRequest(this.model, requestMessages, false);
+                new TranslationRequest(this.aiModelInfo.model(), requestMessages, false);
 
         RequestBody body = RequestBody.create(
-                gson.toJson(translationRequest),
+                Constants.GSON.toJson(translationRequest),
                 MediaType.get("application/json; charset=utf-8")
         );
 
         Request request = new Request.Builder()
-                .url(this.api)
+                .url(this.validateInfo.api())
                 .addHeader("Content-Type", "application/json")
-                .addHeader("Authorization", "Bearer " + this.key)
+                .addHeader("Authorization", "Bearer " + this.validateInfo.key())
                 .post(body)
                 .build();
 
         String translation = s;
 
-        try (Response execute = client.newCall(request).execute()) {
+        try (Response execute = Constants.client.newCall(request).execute()) {
 
             if (!execute.isSuccessful()) return translation;
 
-            ResultInfo info = gson.fromJson(
+            ResultInfo info = Constants.GSON.fromJson(
                     execute.body().string(),
                     ResultInfo.class
             );
@@ -104,10 +89,10 @@ public class OpenAITranslator extends AITranslator implements IBatchTranslator {
 
     @Override
     public List<String> translate(List<String> strings) {
-        String json = gson.toJson(strings);
+        String json = Constants.GSON.toJson(strings);
         String translation = this.translation(json);
         Commandtranslator.LOGGER.info("submit to translator:{}", json);
-        return gson.fromJson(translation, new TypeToken<>() {});
+        return Constants.GSON.fromJson(translation, new TypeToken<>() {});
     }
 
     @AllArgsConstructor
@@ -139,7 +124,7 @@ public class OpenAITranslator extends AITranslator implements IBatchTranslator {
 
         @Override
         public String toString() {
-            return gson.toJson(this);
+            return Constants.GSON.toJson(this);
         }
     }
 }

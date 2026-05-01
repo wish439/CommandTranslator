@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,7 +39,7 @@ public class Container {
     }
 
     public void autoRegister(Object object) {
-        Class<?>[] interfaces = object.getClass().getInterfaces();
+        List<Class<?>> interfaces = ContainerHelper.getInterfaces(object.getClass());
         Class<?> itSelf = object.getClass();
         for (Class<?> aClass : interfaces) {
             this.instances.put(aClass, object);

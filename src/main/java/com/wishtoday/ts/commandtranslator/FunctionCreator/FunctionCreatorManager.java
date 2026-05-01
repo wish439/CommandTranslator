@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.FunctionHandler;
+package com.wishtoday.ts.commandtranslator.FunctionCreator;
 
 import lombok.Getter;
 import net.minecraft.util.Identifier;

@@ -9,12 +9,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class DeepLTranslator extends AbstractTranslator{
+public class DeepLTranslator implements ITranslators {
     private DeepLClient deepLClient;
+    private final ValidateInfo validate;
 
     public DeepLTranslator(String api, String key) {
-        super(api, key);
         this.deepLClient = new DeepLClient(key);
+        this.validate = new ValidateInfo(api, key);
     }
 
     @NotNull

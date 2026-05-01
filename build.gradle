@@ -32,6 +32,11 @@ dependencies {
 
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 }
+tasks.register('generatePatch', Exec) {
+    description = 'Generate .patch file from the latest git commit'
+    workingDir = project.projectDir
+    commandLine 'git', 'format-patch', '-1', 'HEAD', '-o', 'patches'
+}
 
 processResources {
     inputs.property "version", project.version

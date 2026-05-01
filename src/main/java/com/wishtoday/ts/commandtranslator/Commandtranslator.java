@@ -1,6 +1,7 @@
 package com.wishtoday.ts.commandtranslator;
 
 import com.wishtoday.ts.commandtranslator.Cache.*;
+import com.wishtoday.ts.commandtranslator.Command.MainCommand;
 import com.wishtoday.ts.commandtranslator.Config.ABuilderConfig;
 import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.AnnotationAdapter.CommentAdapter;
 import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.AnnotationAdapter.NotDisplayInAdapter;
@@ -22,6 +23,7 @@ import com.wishtoday.ts.commandtranslator.http.ITranslators;
 import lombok.Getter;
 import lombok.Setter;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
@@ -32,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+//Project TODO: Reduce static field, switch com.wishtoday.ts.commandtranslator.Services.Container
 public class Commandtranslator implements ModInitializer {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(Commandtranslator.class);
@@ -44,7 +47,7 @@ public class Commandtranslator implements ModInitializer {
     public static final String MOD_ID = "commandtranslator";
 
     @Getter
-    private static BatchTranslatorProcessorWrapper processorWrapper;
+    private static BatchTranslatorProcessor processor;
 
     public static final String CONFIG_FILE_NAME = "commandtranslator.toml";
     public static final String DataPackName = "zzzzz___generate";
@@ -81,15 +84,14 @@ public class Commandtranslator implements ModInitializer {
                 .model(config.getModel())
                 .build().getTranslator(config.getType());
 
-
-        processorWrapper = new BatchTranslatorProcessorWrapper(new BatchTranslatorProcessor(config.getBatchSize(), config.getTimeout(), translator));
+        processor = new BatchTranslatorProcessor(config.getBatchSize(), config.getTimeout(), translator);
 
         dataSaver = new JsonSaver();
         ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
         Runnable runnable = () -> dataSaver.save(CacheInstance.getINSTANCE());
 
         ScheduledExecutorService service2 = Executors.newScheduledThreadPool(1);
-        service2.scheduleWithFixedDelay(() -> processorWrapper.getWrapped().tick(), 10, 10, TimeUnit.MILLISECONDS);
+        service2.scheduleWithFixedDelay(() -> processor.tick(), 10, 10, TimeUnit.MILLISECONDS);
 
         cacheService = new CacheServiceImpl(CacheInstance.getINSTANCE());
         this.registerProcessor();
@@ -117,6 +119,13 @@ public class Commandtranslator implements ModInitializer {
         return stage;
     }
 
+    private void registerCommands() {
+        CommandRegistrationCallback.EVENT
+                .register((dispatcher, registryAccess, environment) -> {
+                    MainCommand.register(dispatcher);
+                });
+    }
+
     public static void reload() {
         Config load;
         try {
@@ -135,7 +144,7 @@ public class Commandtranslator implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             ProcessorHandler handler = ((ProcessorHandlerInterface) server).getProcessorHandler();
             handler.registerProcessor(new TranslationTaskProcessor(5, server));
-            handler.registerProcessor(getProcessorWrapper().getWrapped());
+            handler.registerProcessor(getProcessor());
         });
     }
 

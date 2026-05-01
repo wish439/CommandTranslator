@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Queue;
 import java.util.concurrent.*;
 
+//TODO: Remove command parse logic.use switch to com.wishtoday.ts.commandtranslator.CommandHandler
 public class TranslationTaskProcessor implements Processor<BlockEntity>{
 
     public TranslationTaskProcessor(int threads, MinecraftServer server) {

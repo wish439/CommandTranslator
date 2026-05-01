@@ -15,8 +15,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-import static com.wishtoday.ts.commandtranslator.Util.TextHandleUtils.*;
-import static com.wishtoday.ts.commandtranslator.Util.TextHandleUtils.getStringsFromTexts;
+import static com.wishtoday.ts.commandtranslator.Helper.CommandTranslator.TextHandleHelper.*;
 
 public class TextArgumentTranslator implements ArgumentTranslator<Text> {
 

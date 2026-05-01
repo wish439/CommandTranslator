@@ -1,12 +1,7 @@
-package com.wishtoday.ts.commandtranslator.FunctionHandler;
+package com.wishtoday.ts.commandtranslator.FunctionCreator;
 
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.llamalad7.mixinextras.sugar.ref.LocalBooleanRef;
-import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
-import com.wishtoday.ts.commandtranslator.Util.NioUtils;
 import lombok.Getter;
 import net.fabricmc.fabric.impl.resource.loader.ModResourcePackUtil;
 import net.minecraft.SharedConstants;
@@ -39,7 +34,7 @@ public class FunctionCreator {
     public boolean create(FunctionDataPack dataPack, MinecraftServer server) {
         Path path = server.getSavePath(WorldSavePath.DATAPACKS);
         Path rootDirectoryPath = path.resolve(dataPack.name);
-        NioUtils.deleteDirectories(rootDirectoryPath);
+        CreatorHelper.deleteDirectories(rootDirectoryPath);
         path = rootDirectoryPath.resolve("data");
         List<ExpandedMacro<ServerCommandSource>> functions = dataPack.functions;
         Commandtranslator.LOGGER.info("Creating Function DataPack {} to {}", functions.toString(), rootDirectoryPath);
@@ -52,7 +47,7 @@ public class FunctionCreator {
             AtomicBoolean ref = new AtomicBoolean(false);
             CompletableFuture<Void> metaFuture = CompletableFuture.runAsync(() -> {
                 Path mcMetaPath = rootDirectoryPath.resolve("pack.mcmeta");
-                NioUtils.createFileAndWrite(mcMetaPath, ModResourcePackUtil.serializeMetadata(dataPack.packFormat, dataPack.description));
+                CreatorHelper.createFileAndWrite(mcMetaPath, ModResourcePackUtil.serializeMetadata(dataPack.packFormat, dataPack.description));
             }, executor).exceptionally((t) -> {
                 Commandtranslator.LOGGER.error("threw an error when creating datapacks.", t);
                 ref.set(false);
@@ -64,7 +59,7 @@ public class FunctionCreator {
                         Identifier id = macro.id();
                         Path resolve = resolveFromID(id, finalPath);
 
-                        NioUtils.createFileAndWrite(resolve, macro.entries().stream().map(Object::toString).collect(Collectors.joining("\n")));
+                        CreatorHelper.createFileAndWrite(resolve, macro.entries().stream().map(Object::toString).collect(Collectors.joining("\n")));
                     }), executor).exceptionally((t) -> {
                         Commandtranslator.LOGGER.error("threw an error when creating datapacks.", t);
                         ref.set(false);

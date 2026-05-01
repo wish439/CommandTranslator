@@ -1,8 +1,8 @@
 package com.wishtoday.ts.commandtranslator.mixin.FunctionImpl;
 
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
-import com.wishtoday.ts.commandtranslator.FunctionHandler.FunctionCreator;
-import com.wishtoday.ts.commandtranslator.FunctionHandler.FunctionCreatorManager;
+import com.wishtoday.ts.commandtranslator.FunctionCreator.FunctionCreator;
+import com.wishtoday.ts.commandtranslator.FunctionCreator.FunctionCreatorManager;
 import com.wishtoday.ts.commandtranslator.Config.Config;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
@@ -15,7 +15,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

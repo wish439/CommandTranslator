@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
+//TODO: switch to BuilderConfig system.
 @Setter
 @Getter
 public class Config implements MultiLanguageConfig {

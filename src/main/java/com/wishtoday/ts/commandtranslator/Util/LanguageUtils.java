@@ -1,5 +1,6 @@
 package com.wishtoday.ts.commandtranslator.Util;
 
+//TODO: Move this class to other package.
 public class LanguageUtils {
     public static boolean isChineseSentence(String sentence, double range) {
         if (range < 0) {

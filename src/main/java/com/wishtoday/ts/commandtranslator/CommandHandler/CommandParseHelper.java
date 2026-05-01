@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.Util;
+package com.wishtoday.ts.commandtranslator.CommandHandler;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.StringReader;
@@ -10,8 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-//TODO: Remove this class, switch com.wishtoday.ts.commandtranslator.CommandHandler.CommandParseHelper
-public class CommandParseUtils {
+public class CommandParseHelper {
     public static <T> CommandContextBuilder<T> changeToDeepest(CommandContextBuilder<T> context) {
         while (context.getChild() != null) {
             context = context.getChild();

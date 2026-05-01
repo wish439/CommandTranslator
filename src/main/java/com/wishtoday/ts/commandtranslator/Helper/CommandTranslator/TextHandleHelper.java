@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.Util;
+package com.wishtoday.ts.commandtranslator.Helper.CommandTranslator;
 
 import net.minecraft.text.MutableText;
 import net.minecraft.text.PlainTextContent;
@@ -12,11 +12,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class TextHandleUtils {
-    private TextHandleUtils() {}
+public class TextHandleHelper {
+    private TextHandleHelper() {}
 
     @NotNull
-    public static String getStringFromText(@NotNull Text text) {
+    static String getStringFromText(@NotNull Text text) {
         if (!(text.getContent() instanceof PlainTextContent textContent)) return "";
         return textContent.string();
     }
@@ -24,8 +24,8 @@ public class TextHandleUtils {
 
     //this method returns an Immutable List
     @NotNull
-    public static List<String> getStringsFromTexts(@NotNull List<Text> texts) {
-        return texts.stream().map(TextHandleUtils::getStringFromText).toList();
+    static List<String> getStringsFromTexts(@NotNull List<Text> texts) {
+        return texts.stream().map(TextHandleHelper::getStringFromText).toList();
     }
 
     @NotNull

@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.Util;
+package com.wishtoday.ts.commandtranslator.FunctionCreator;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -10,8 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-public class NioUtils {
-    public static void createFileAndWrite(Path path, String content) {
+public class CreatorHelper {
+    static void createFileAndWrite(Path path, String content) {
         if (!Files.exists(path.getParent())) {
             try {
                 Files.createDirectories(path.getParent());
@@ -27,7 +27,7 @@ public class NioUtils {
         }
     }
 
-    public static void createFile(Path path) {
+    static void createFile(Path path) {
         try {
             Files.createFile(path);
         } catch (IOException e) {
@@ -35,13 +35,13 @@ public class NioUtils {
         }
     }
 
-    public static void deleteDirectories(@NotNull Path path) {
+    static void deleteDirectories(@NotNull Path path) {
         if (!path.toFile().exists()) return;
         File file = path.toFile();
         DeleteDir(file);
     }
 
-    public static void DeleteDir(File dir) {
+    static void DeleteDir(File dir) {
         File[] files = dir.listFiles();
         if (files != null) {
             for (File file : files) {

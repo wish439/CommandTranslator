@@ -18,7 +18,7 @@ public class JsonSaver implements DataSaver {
     private Gson gson;
 
     public JsonSaver() {
-        path = PathUtil.getServerConfigPath().resolve("ArgumentTranslator").resolve("cache.json");
+        path = PathUtil.getConfigPath("serverconfig").resolve("ArgumentTranslator").resolve("cache.json");
         if (Files.notExists(path)) {
             this.createCache();
         }

@@ -4,7 +4,7 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.TranslatableComment;
 import com.wishtoday.ts.commandtranslator.Data.Configs.AnnotationInfo;
 import com.wishtoday.ts.commandtranslator.Config.MultiLanguageConfig;
-import com.wishtoday.ts.commandtranslator.Util.ConfigUtils;
+import com.wishtoday.ts.commandtranslator.Util.StringUtils;
 
 public class TranslatableCommentAdapter implements AnnotationAdapter<TranslatableComment>{
     @Override
@@ -14,10 +14,10 @@ public class TranslatableCommentAdapter implements AnnotationAdapter<Translatabl
         Object o = instance instanceof MultiLanguageConfig m ? m.getCurrentLanguage() : (config.get("configLang") == null ? null : config.get("configLang"));
         if (o == null) {
             if (!comment.defaultValue().isEmpty()) {
-                config.setComment(annotationInfo.field().key(), ConfigUtils.filterUnblank("\n" ,comment.defaultValue()));
+                config.setComment(annotationInfo.field().key(), StringUtils.filterUnblank("\n" ,comment.defaultValue()));
             }
             if (comment.defaultValueIndexInValue() != -1) {
-                config.setComment(annotationInfo.field().key(), ConfigUtils.filterUnblank("\n", comment.value()[comment.defaultValueIndexInValue()]));
+                config.setComment(annotationInfo.field().key(), StringUtils.filterUnblank("\n", comment.value()[comment.defaultValueIndexInValue()]));
             }
             return false;
         }
@@ -27,7 +27,7 @@ public class TranslatableCommentAdapter implements AnnotationAdapter<Translatabl
                 continue;
             }
             String content = comment.value()[i];
-            config.setComment(annotationInfo.field().key(), ConfigUtils.filterUnblank("\n" ,content));
+            config.setComment(annotationInfo.field().key(), StringUtils.filterUnblank("\n" ,content));
             return false;
         }
         return false;

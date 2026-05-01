@@ -13,14 +13,12 @@ import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.CommandNode;
 import com.wishtoday.ts.commandtranslator.Cache.CacheCheckResult;
-import com.wishtoday.ts.commandtranslator.Cache.CacheInstance;
 import com.wishtoday.ts.commandtranslator.Cache.CacheService;
-import com.wishtoday.ts.commandtranslator.Cache.CacheServiceImpl;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Config.Config;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
-import com.wishtoday.ts.commandtranslator.FunctionHandler.FunctionCreatorManager;
+import com.wishtoday.ts.commandtranslator.FunctionCreator.FunctionCreatorManager;
 import com.wishtoday.ts.commandtranslator.Helper.BooleanCommandChecker;
 import com.wishtoday.ts.commandtranslator.Helper.CacheCommandChecker;
 import com.wishtoday.ts.commandtranslator.Helper.TextCommandChecker;
@@ -37,7 +35,6 @@ import net.minecraft.server.function.CommandFunction;
 import net.minecraft.server.function.FunctionBuilder;
 import net.minecraft.server.function.FunctionLoader;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -51,6 +48,7 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+//TODO: Remove create,processAsync,validateCommandLength,continuesToNextLine,parseAsync. switch to com.wishtoday.ts.commandtranslator.CommandHandler.FunctionTranslationProvider
 @Mixin(FunctionLoader.class)
 public abstract class FC_FunctionLoaderMixin {
     @Shadow
@@ -75,7 +73,6 @@ public abstract class FC_FunctionLoaderMixin {
                     return original.call(supplier, executor);
                 });
     }
-
     private CompletableFuture<CommandFunction<ServerCommandSource>> create(Identifier id, CommandDispatcher<ServerCommandSource> dispatcher, ServerCommandSource source, List<String> lines, Executor executor) throws IllegalArgumentException {
         FunctionBuilder<ServerCommandSource> functionBuilder = null;
         try {
@@ -206,7 +203,7 @@ public abstract class FC_FunctionLoaderMixin {
 
         //TranslateStringResults right = processor.replaceTheContextNodeAndGetTranslateResult();
 
-        BatchTranslatorProcessor processor = Commandtranslator.getProcessorWrapper().getWrapped();
+        BatchTranslatorProcessor processor = Commandtranslator.getProcessor();
 
         TextNodeTranslatorStorage<?> storage = manager.getCommand(headNode.getName());
 

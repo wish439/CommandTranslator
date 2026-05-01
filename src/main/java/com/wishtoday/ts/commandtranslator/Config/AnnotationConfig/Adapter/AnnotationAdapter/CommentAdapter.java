@@ -3,12 +3,12 @@ package com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.Annot
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.Comment;
 import com.wishtoday.ts.commandtranslator.Data.Configs.AnnotationInfo;
-import com.wishtoday.ts.commandtranslator.Util.ConfigUtils;
+import com.wishtoday.ts.commandtranslator.Util.StringUtils;
 
 public class CommentAdapter implements AnnotationAdapter<Comment> {
     @Override
     public boolean apply0(CommentedConfig config, AnnotationInfo<?, Comment> annotationInfo) {
-        config.setComment(annotationInfo.field().key(), ConfigUtils.filterUnblank("\n", annotationInfo.annotation().value()));
+        config.setComment(annotationInfo.field().key(), StringUtils.filterUnblank("\n", annotationInfo.annotation().value()));
         return false;
     }
 

@@ -12,7 +12,7 @@ import com.wishtoday.ts.commandtranslator.Cache.CacheInstance;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
-import com.wishtoday.ts.commandtranslator.FunctionHandler.FunctionCreatorManager;
+import com.wishtoday.ts.commandtranslator.FunctionCreator.FunctionCreatorManager;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
 import com.wishtoday.ts.commandtranslator.Processor.BatchTranslatorProcessor;
 import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
@@ -72,7 +72,7 @@ public interface FC_CommandFunctionMixin {
 
         //TranslateStringResults right = processor.replaceTheContextNodeAndGetTranslateResult();
 
-        BatchTranslatorProcessor processor = Commandtranslator.getProcessorWrapper().getWrapped();
+        BatchTranslatorProcessor processor = Commandtranslator.getProcessor();
 
         TranslateResults<?> translated = storage.translate(context, TranslateUtils.getDefaultTranslateStrategy(config, processor));
         if (translated == null) return original.call(dispatcher, source, reader);

@@ -1,12 +1,12 @@
-package com.wishtoday.ts.commandtranslator.Util;
+package com.wishtoday.ts.commandtranslator.Config;
 
 import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.Range;
 
 import java.util.Arrays;
 import java.util.List;
 
-public final class ConfigUtils {
-    private ConfigUtils() {}
+public final class ConfigHelper {
+    private ConfigHelper() {}
 
     public static boolean isSimpleType(Class<?> type) {
         return type.isPrimitive()
@@ -43,11 +43,5 @@ public final class ConfigUtils {
         return value;
     }
 
-    public static String filterUnblank(String delimiter, String s) {
-        String[] split = s.split(delimiter);
-        List<String> list = Arrays.stream(split)
-                .filter(a -> !a.isBlank())
-                .toList();
-        return String.join(delimiter, list);
-    }
+
 }

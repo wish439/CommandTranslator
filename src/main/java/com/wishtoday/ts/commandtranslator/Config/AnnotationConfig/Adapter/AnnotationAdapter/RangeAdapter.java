@@ -2,8 +2,8 @@ package com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.Annot
 
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.Range;
+import com.wishtoday.ts.commandtranslator.Config.ConfigHelper;
 import com.wishtoday.ts.commandtranslator.Data.Configs.AnnotationInfo;
-import com.wishtoday.ts.commandtranslator.Util.ConfigUtils;
 
 import java.lang.reflect.Field;
 
@@ -45,7 +45,7 @@ public class RangeAdapter implements AnnotationAdapter<Range> {
         Field field = annotationInfo.field().field();
         Class<?> type = field.getType();
         if (range != null && read instanceof Number n) {
-            read = ConfigUtils.clampNumber(n, range, type);
+            read = ConfigHelper.clampNumber(n, range, type);
         }
         Object obj = annotationInfo.field().configClassInfo().instance();
 

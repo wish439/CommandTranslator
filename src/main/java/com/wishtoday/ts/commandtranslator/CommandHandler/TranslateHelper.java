@@ -1,18 +1,19 @@
-package com.wishtoday.ts.commandtranslator.Util;
+package com.wishtoday.ts.commandtranslator.CommandHandler;
 
 import com.mojang.brigadier.context.StringRange;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Config.Config;
 import com.wishtoday.ts.commandtranslator.Helper.Stringer.Stringer;
 import com.wishtoday.ts.commandtranslator.Processor.BatchTranslatorProcessor;
+import com.wishtoday.ts.commandtranslator.Util.LanguageUtils;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-//TODO: Remove this class, switch com.wishtoday.ts.commandtranslator.CommandHandler.TranslateHelper
-public class TranslateUtils {
+//TODO: remove this class, switch
+public class TranslateHelper {
     public static Function<String, String> getDefaultTranslateStrategy(Config config, BatchTranslatorProcessor processor) {
         return s -> {
             if (LanguageUtils.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return s;

@@ -5,14 +5,14 @@ import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude.Translat
 import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Entry.MutableConfigEntry;
 import com.wishtoday.ts.commandtranslator.Config.MultiLanguageConfig;
 import com.wishtoday.ts.commandtranslator.Data.Configs.ConfigFieldInfo;
-import com.wishtoday.ts.commandtranslator.Util.ConfigUtils;
+import com.wishtoday.ts.commandtranslator.Util.StringUtils;
 
 public class TranslatableCommentAttitudeAdapter implements AttitudeAdapter<TranslatableCommentAttitude> {
     @Override
     public void postWrite(MutableConfigEntry<?,?> configEntry, CommentedFileConfig config, TranslatableCommentAttitude attitude, ConfigFieldInfo<?> configFieldInfo) {
         Object instance = configFieldInfo.configClassInfo().instance();
 
-        String defaultComment = ConfigUtils.filterUnblank("\n", attitude.getDefaultComment());
+        String defaultComment = StringUtils.filterUnblank("\n", attitude.getDefaultComment());
         if (!(instance instanceof MultiLanguageConfig multiLanguageConfig)) {
             config.setComment(configFieldInfo.key(), defaultComment);
             return;
@@ -24,7 +24,7 @@ public class TranslatableCommentAttitudeAdapter implements AttitudeAdapter<Trans
             config.setComment(configFieldInfo.key(), defaultComment);
             return;
         }
-        s = ConfigUtils.filterUnblank("\n", s);
+        s = StringUtils.filterUnblank("\n", s);
         config.setComment(configFieldInfo.key(), s);
     }
 }
