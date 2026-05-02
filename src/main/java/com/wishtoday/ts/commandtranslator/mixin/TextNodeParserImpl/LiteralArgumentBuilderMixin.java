@@ -30,6 +30,9 @@ public class LiteralArgumentBuilderMixin {
             , @Local final LiteralCommandNode<S> result) {
         if (!Commandtranslator.isModActive()) return;
         Optional<TextCommandManager> manager = Container.getInstance().get(TextCommandManager.class);
+        if (manager.isEmpty()) {
+            Commandtranslator.LOGGER.warnWithCaller("Text command manager not found");
+        }
         manager.ifPresent(textCommandManager -> {
             List<CommandNode<S>> list = CommandParseUtils.getAllChildrenAndItSelf(node);
             for (CommandNode<S> commandNode : list) {

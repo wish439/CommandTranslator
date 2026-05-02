@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,22 +35,23 @@ public class ObjectFactory {
         }
         constructor.setAccessible(true);
         Class<?>[] types = constructor.getParameterTypes();
+        System.out.println(Arrays.toString(types));
         List<Object> args = new ArrayList<>();
         int i = 0;
-        for (Class<?> type : types) {
-            Optional<?> o = this.getObject(type, tryGetConfigValue(type, i++, constructor));
-            if (o.isPresent()) {
-                args.add(o.get());
-                continue;
-            }
-            if (depth >= MAX_DEPTH) {
-                Commandtranslator.LOGGER.error("Recursion is too deep, stopped.", new RecursionDeepException());
-                return Optional.empty();
-            }
-            Optional<?> t = this.create(type, ++depth);
-            t.ifPresent(args::add);
-        }
         try {
+            for (Class<?> type : types) {
+                Optional<?> o = this.getObject(type, tryGetConfigValue(type, i++, constructor));
+                if (o.isPresent()) {
+                    args.add(o.get());
+                    continue;
+                }
+                if (depth >= MAX_DEPTH) {
+                    Commandtranslator.LOGGER.error("Recursion is too deep, stopped.", new RecursionDeepException());
+                    return Optional.empty();
+                }
+                Optional<?> t = this.create(type, ++depth);
+                t.ifPresent(args::add);
+            }
             return Optional.of((T) constructor.newInstance(args.toArray()));
         } catch (Exception e) {
             Commandtranslator.LOGGER.error("threw a exception when created {}", clazz.getName(), e);
@@ -58,7 +60,7 @@ public class ObjectFactory {
     }
 
     @SuppressWarnings("OptionalAssignedToNull")
-    private Optional<?> getObject(Class<?> type, ConfigValue configValue) {
+    private Optional<?> getObject(Class<?> type, ConfigValue configValue) throws ReflectiveOperationException {
         Optional<?> o = null;
         if (!TypeUtils.isSimpleType(type)) {
             o = this.container.get(type);

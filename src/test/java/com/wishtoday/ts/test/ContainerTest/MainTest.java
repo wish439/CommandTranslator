@@ -27,11 +27,11 @@ public class MainTest {
 
     @Test
     public void config() {
-        IConfigLoader<Config> builderConfigLoader = ConfigLoaderBuilder
-                .<Config>builderConfigLoader()
+        IConfigLoader<TestConfig> builderConfigLoader = ConfigLoaderBuilder
+                .<TestConfig>builderConfigLoader()
                 .registerAttitudeAdapter(TranslatableCommentAttitude.class, new TranslatableCommentAttitudeAdapter())
                 .buildBuilderConfigLoader();
-        Config load = builderConfigLoader.load(Config::new, Path.of("F:\\My_Minecraft_Mod\\CommandTranslator\\run\\config\\testDir.toml"));
+        TestConfig load = builderConfigLoader.load(TestConfig::new, Path.of("F:\\My_Minecraft_Mod\\CommandTranslator\\run\\config\\testDir.toml"));
         System.out.println(load.getTestEnum().getValue());
         Container instance = Container.getInstance();
         ObjectFactory factory = new ObjectFactory(instance, load);

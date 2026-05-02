@@ -40,7 +40,7 @@ public class Commandtranslator implements ModInitializer {
     @Getter
     private static final Commandtranslator Instance = new Commandtranslator();
 
-    public static final Logger LOGGER = LoggerFactory.getLogger(Commandtranslator.class);
+    public static final LoggerExtension LOGGER = new LoggerExtension(LoggerFactory.getLogger(Commandtranslator.class));
     private IConfigLoader<CopyToBuilderConfig> configLoader;
 
     public static final String MOD_ID = "commandtranslator";

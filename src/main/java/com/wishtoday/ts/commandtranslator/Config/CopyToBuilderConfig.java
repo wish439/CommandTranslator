@@ -8,12 +8,14 @@ import com.wishtoday.ts.commandtranslator.TranslateEnvironment;
 import com.wishtoday.ts.commandtranslator.Translator.TranslatorType;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
-public class CopyToBuilderConfig implements MultiLanguageConfig, ValuableConfig, ApplicationConfig{
+public class CopyToBuilderConfig implements MultiLanguageConfig, ValuableConfig, ApplicationConfig {
 
 
     private final ConfigEntry<CopyToBuilderConfig, String> language =
@@ -344,8 +346,41 @@ public class CopyToBuilderConfig implements MultiLanguageConfig, ValuableConfig,
     }
 
     @Override
-    public <T> Optional<T> getConfigValue(String key, Class<T> type) {
-        return Optional.empty();
+    public <T> Optional<T> getConfigValue(String key, Class<T> type) throws ReflectiveOperationException {
+        return this.getConfigValue(this, key, type);
+    }
+
+    public <T> Optional<T> getConfigValue(Object obj, String key, Class<T> type) throws ReflectiveOperationException {
+        ConfigPathReader reader = new ConfigPathReader(key);
+        if (!reader.hasNextPath()) return Optional.empty();
+        String s = reader.readNextPath();
+        Class<?> aClass = obj.getClass();
+        Field field = aClass.getDeclaredField(s);
+        Object o = field.get(obj);
+        if (!(o instanceof ConfigEntry<?, ?> entry)) {
+            return Optional.empty();
+        }
+
+        Object value = entry.getValue();
+
+        //逆天Class#isAssignableFrom,int跟Integer给我返回false
+        if (ClassUtils.isAssignable(type, value.getClass())) {
+            return Optional.of((T) value);
+        }
+        return getConfigValue(value, type, reader);
+    }
+
+    public <T> Optional<T> getConfigValue(Object obj, Class<T> type, ConfigPathReader reader) throws ReflectiveOperationException {
+        if (!reader.hasNextPath()) return Optional.empty();
+        String s = reader.readNextPath();
+        Class<?> aClass = obj.getClass();
+        Field field = aClass.getDeclaredField(s);
+        Object o = field.get(obj);
+
+        if (ClassUtils.isAssignable(o.getClass(), type)) {
+            return Optional.of((T) o);
+        }
+        return getConfigValue(o, type, reader);
     }
 
     @Override

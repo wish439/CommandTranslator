@@ -1,6 +1,7 @@
 package com.wishtoday.ts.commandtranslator.mixin.CommandBlockImpl;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Config.CopyToBuilderConfig;
 import com.wishtoday.ts.commandtranslator.Processor.ProcessorHandlerInterface;
 import com.wishtoday.ts.commandtranslator.Processor.TranslationTaskProcessor;
@@ -38,6 +39,7 @@ public class CB_ChunkSerializerMixin {
     private static void method(NbtList nbtList, ServerWorld serverWorld, NbtList nbtList2, WorldChunk chunk, CallbackInfo ci, @Local BlockEntity blockEntity) {
         Optional<CopyToBuilderConfig> copyToBuilderConfig = Container.getInstance().get(CopyToBuilderConfig.class);
         if (copyToBuilderConfig.isEmpty()) {
+            Commandtranslator.LOGGER.warnWithCaller("CopyToBuilderConfig is null or empty");
             return;
         }
         CopyToBuilderConfig config = copyToBuilderConfig.get();

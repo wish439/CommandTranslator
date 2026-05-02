@@ -1,11 +1,12 @@
-[16:19:12] [Test worker/ERROR]: threw a exception when created com.wishtoday.ts.test.ContainerTest.SimpleService
-java.lang.IllegalArgumentException: wrong number of arguments: 0 expected: 2
-	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:59) ~[?:?]
-	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502) ~[?:?]
-	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486) ~[?:?]
-	at com.wishtoday.ts.commandtranslator.Services.ObjectFactory.create(ObjectFactory.java:53) ~[main/:?]
-	at com.wishtoday.ts.commandtranslator.Services.ObjectFactory.create(ObjectFactory.java:26) ~[main/:?]
-	at com.wishtoday.ts.test.ContainerTest.MainTest.config(MainTest.java:24) ~[test/:?]
+[22:30:48] [Test worker/ERROR]: threw a exception when created com.wishtoday.ts.test.ContainerTest.DeeplyService
+java.lang.NoSuchFieldException: testClass.
+	at java.base/java.lang.Class.getDeclaredField(Class.java:2782) ~[?:?]
+	at com.wishtoday.ts.test.ContainerTest.TestConfig.getConfigValue(TestConfig.java:124) ~[test/:?]
+	at com.wishtoday.ts.test.ContainerTest.TestConfig.getConfigValue(TestConfig.java:115) ~[test/:?]
+	at com.wishtoday.ts.commandtranslator.Services.ObjectFactory.getObject(ObjectFactory.java:69) ~[main/:?]
+	at com.wishtoday.ts.commandtranslator.Services.ObjectFactory.create(ObjectFactory.java:43) ~[main/:?]
+	at com.wishtoday.ts.commandtranslator.Services.ObjectFactory.create(ObjectFactory.java:27) ~[main/:?]
+	at com.wishtoday.ts.test.ContainerTest.MainTest.config(MainTest.java:38) ~[test/:?]
 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[?:?]
 	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[?:?]
 	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:725) ~[junit-platform-commons-1.8.1.jar:1.8.1]

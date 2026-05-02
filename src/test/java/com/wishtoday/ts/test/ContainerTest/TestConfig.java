@@ -2,8 +2,12 @@ package com.wishtoday.ts.test.ContainerTest;
 
 import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude.TranslatableCommentAttitude;
 import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Entry.ConfigEntry;
+import com.wishtoday.ts.commandtranslator.Config.ConfigPathReader;
 import com.wishtoday.ts.commandtranslator.Config.ValuableConfig;
+import com.wishtoday.ts.commandtranslator.Services.CreateConstruction;
+import org.apache.commons.lang3.ClassUtils;
 
+import java.lang.reflect.Field;
 import java.util.Optional;
 
 public class TestConfig implements ValuableConfig {
@@ -30,6 +34,72 @@ public class TestConfig implements ValuableConfig {
                     .defaultValue(114514D)
                     .build();
 
+    private final ConfigEntry<TestConfig, TestClass> testClass =
+            ConfigEntry.<TestConfig, TestClass>builder()
+                    .serializedName("testClass")
+                    .defaultValue(new TestClass("", 0, -1D))
+                    .child(
+                            ConfigEntry.<TestClass, String>builder()
+                                    .serializedName("a")
+                                    .defaultValue("default A")
+                                    .setter(TestClass::setA)
+                                    .build()
+                    )
+                    .child(
+                            ConfigEntry.<TestClass, Integer>builder()
+                                    .serializedName("b")
+                                    .defaultValue(115)
+                                    .setter(TestClass::setB)
+                                    .build()
+                    )
+                    .child(
+                            ConfigEntry.<TestClass, Double>builder()
+                                    .serializedName("c")
+                                    .defaultValue(1789D)
+                                    .setter(TestClass::setC)
+                                    .build()
+                    )
+                    .build();
+
+
+
+    public class TestClass {
+        private String a;
+        private int b;
+        private double c;
+
+        public String getA() {
+            return a;
+        }
+
+        public void setA(String a) {
+            this.a = a;
+        }
+
+        public int getB() {
+            return b;
+        }
+
+        public void setB(int b) {
+            this.b = b;
+        }
+
+        public double getC() {
+            return c;
+        }
+
+        public void setC(double c) {
+            this.c = c;
+        }
+
+        @CreateConstruction
+        public TestClass(String a, int b, double c) {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+        }
+    }
+
     public ConfigEntry<TestConfig, TestEnum> getTestEnum() {
         return testEnum;
     }
@@ -40,18 +110,49 @@ public class TestConfig implements ValuableConfig {
                     .defaultValue(TestEnum.TESTA)
                     .build();
 
-
-    @SuppressWarnings("unchecked")
     @Override
-    public <T> Optional<T> getConfigValue(String key, Class<T> type) {
-        try {
-            return Optional.ofNullable(((ConfigEntry<TestConfig, T>) this.getClass()
-                    .getDeclaredField(key)
-                    .get(this)).getValue());
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        }
+    public <T> Optional<T> getConfigValue(String key, Class<T> type) throws ReflectiveOperationException {
+        return this.getConfigValue(this, key, type);
     }
+
+    public <T> Optional<T> getConfigValue(Object obj, String key, Class<T> type) throws ReflectiveOperationException {
+        ConfigPathReader reader = new ConfigPathReader(key);
+        if (!reader.hasNextPath()) return Optional.empty();
+        String s = reader.readNextPath();
+        Class<?> aClass = obj.getClass();
+        Field field = aClass.getDeclaredField(s);
+        Object o = field.get(obj);
+        if (!(o instanceof ConfigEntry<?, ?> entry)) {
+            return Optional.empty();
+        }
+
+        Object value = entry.getValue();
+
+        System.out.println(value.getClass());
+        System.out.println(type);
+        if (ClassUtils.isAssignable(type, value.getClass())) {
+            return Optional.of((T) value);
+        }
+        return getConfigValue(value, s, type, reader);
+    }
+
+    public <T> Optional<T> getConfigValue(Object obj, String key, Class<T> type, ConfigPathReader reader) throws ReflectiveOperationException {
+        if (!reader.hasNextPath()) return Optional.empty();
+        String s = reader.readNextPath();
+        Class<?> aClass = obj.getClass();
+        Field field = aClass.getDeclaredField(s);
+        Object o = field.get(obj);
+
+        System.out.println(o.getClass().getName());
+        boolean assignable = ClassUtils.isAssignable(o.getClass(), type);
+        System.out.println(assignable);
+        if (assignable) {
+            System.out.println("this" + o.getClass().getName());
+            return Optional.of((T) o);
+        }
+        return getConfigValue(o, s, type, reader);
+    }
+
 
     public enum TestEnum {
         TESTA,

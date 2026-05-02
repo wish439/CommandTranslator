@@ -24,6 +24,9 @@ public class CommandDispatcherMixin {
             , @Local final LiteralCommandNode<S> build) {
         if (!Commandtranslator.isModActive()) return;
         Optional<TextCommandManager> textCommandManagerOptional = Container.getInstance().get(TextCommandManager.class);
+        if (textCommandManagerOptional.isEmpty()) {
+            Commandtranslator.LOGGER.warnWithCaller("Text command manager not found");
+        }
         textCommandManagerOptional.ifPresent(textCommandManager -> {
             String literal = build.getLiteral();
             if (!textCommandManager.containsCache(literal)) {
