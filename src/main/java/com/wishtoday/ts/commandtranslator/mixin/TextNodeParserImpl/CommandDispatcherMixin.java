@@ -5,13 +5,16 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
+import com.wishtoday.ts.commandtranslator.Config.ApplicationConfig;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
-import com.wishtoday.ts.commandtranslator.Config.Config;
+import com.wishtoday.ts.commandtranslator.Services.Container;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Optional;
 
 @Mixin(CommandDispatcher.class)
 public class CommandDispatcherMixin {
@@ -20,20 +23,26 @@ public class CommandDispatcherMixin {
             , CallbackInfoReturnable<LiteralCommandNode<S>> cir
             , @Local final LiteralCommandNode<S> build) {
         if (!Commandtranslator.isModActive()) return;
-        TextCommandManager instance = TextCommandManager.getINSTANCE();
-        String literal = build.getLiteral();
-        if (!instance.containsCache(literal)) {
-            instance.clearCache();
-            return;
-        }
-        Config config = Config.getInstance();
-        if (!config.validate(literal)) {
-            instance.clearCache();
-            return;
-        }
-        TextNodeTranslatorStorage<?> cache = instance.getCache(literal);
-        instance.addCommand(literal, cache);
-        instance.clearCache();
-        System.out.println(literal);
+        Optional<TextCommandManager> textCommandManagerOptional = Container.getInstance().get(TextCommandManager.class);
+        textCommandManagerOptional.ifPresent(textCommandManager -> {
+            String literal = build.getLiteral();
+            if (!textCommandManager.containsCache(literal)) {
+                textCommandManager.clearCache();
+                return;
+            }
+            Optional<ApplicationConfig> configOptional = Container.getInstance().get(ApplicationConfig.class);
+            if (configOptional.isEmpty()) {
+                return;
+            }
+            if (!configOptional.get().validateCommand(literal)) {
+                textCommandManager.clearCache();
+                return;
+            }
+            TextNodeTranslatorStorage<?> cache = textCommandManager.getCache(literal);
+            textCommandManager.addCommand(literal, cache);
+            textCommandManager.clearCache();
+            System.out.println(literal);
+        });
+
     }
 }

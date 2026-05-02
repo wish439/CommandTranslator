@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OpenAITranslator implements ITranslators {
+public class OpenAITranslator implements ITranslator {
 
     private List<MessageInfo> messages;
     private final AIModelInfo aiModelInfo;

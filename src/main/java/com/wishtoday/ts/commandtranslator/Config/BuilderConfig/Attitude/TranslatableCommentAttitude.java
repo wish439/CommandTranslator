@@ -1,20 +1,13 @@
 package com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude;
 
-import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude.AttitudeAdapter.TranslatableCommentAttitudeAdapter;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.HashMap;
 
 @Getter
-public class TranslatableCommentAttitude implements Attitude<TranslatableCommentAttitudeAdapter> {
+public class TranslatableCommentAttitude implements Attitude {
     private final HashMap<String, String> comments;
     private final String defaultComment;
-    @Override
-    public Class<TranslatableCommentAttitudeAdapter> getAdapter() {
-        return TranslatableCommentAttitudeAdapter.class;
-    }
 
     public TranslatableCommentAttitude(Builder builder) {
         this.comments = builder.comments;

@@ -6,14 +6,16 @@ import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.ParsedArgument;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.tree.CommandNode;
-import com.wishtoday.ts.commandtranslator.Cache.CacheInstance;
+import com.wishtoday.ts.commandtranslator.Cache.CacheService;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
+import com.wishtoday.ts.commandtranslator.Config.CopyToBuilderConfig;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
+import com.wishtoday.ts.commandtranslator.Services.Container;
 import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
 import com.wishtoday.ts.commandtranslator.Util.LanguageUtils;
-import com.wishtoday.ts.commandtranslator.Config.Config;
+import com.wishtoday.ts.commandtranslator.http.ITranslator;
 import com.wishtoday.ts.commandtranslator.mixin.Accessor.ServerCommandSourceAccessor;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.CommandOutput;
@@ -28,8 +30,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+//TODO:fix this class?or remove.
+//temporary fix.pass compiler check.
 @Mixin(CommandManager.class)
 public class CB_CommandManagerMixin {
     @Shadow
@@ -41,9 +46,13 @@ public class CB_CommandManagerMixin {
     private void execute(ParseResults<ServerCommandSource> parseResults
             , String command, CallbackInfo ci) {
         if (!Commandtranslator.isModActive()) return;
-        Config config = Config.getInstance();
+        Optional<CopyToBuilderConfig> optionalCopyToBuilderConfig = Container.getInstance().get(CopyToBuilderConfig.class);
+        if (optionalCopyToBuilderConfig.isEmpty()) {
+            return;
+        }
+        CopyToBuilderConfig config = optionalCopyToBuilderConfig.get();
         if (!config.isEnableTranslate() || !config.isTranslateCommandBlocks()) return;
-        if (config.getCommandBlockTranslateStrategy() != Config.CommandBlockTranslateStrategy.TRIGGER) return;
+        if (config.getCommandTranslateStrategy() != CopyToBuilderConfig.CommandBlockTranslateStrategy.TRIGGER) return;
         CommandContextBuilder<ServerCommandSource> context = parseResults.getContext();
         ServerCommandSource source = context.getSource();
         if (!(source instanceof ServerCommandSourceAccessor accessor)) return;
@@ -52,19 +61,29 @@ public class CB_CommandManagerMixin {
 
         context = CommandParseUtils.changeToDeepest(context);
 
-        TextCommandManager manager = TextCommandManager.getINSTANCE();
+        Optional<TextCommandManager> textCommandManagerOptional = Container.getInstance().get(TextCommandManager.class);
+        if (textCommandManagerOptional.isEmpty()) {
+            return;
+        }
+        TextCommandManager manager = textCommandManagerOptional.get();
         CommandNode<ServerCommandSource> headNode = context.getNodes().getFirst().getNode();
 
         if (!manager.containsCommand(headNode.getName())) return;
 
         TextNodeTranslatorStorage<?> storage = manager.getCommand(headNode.getName());
 
-        CacheInstance instance = CacheInstance.getINSTANCE();
+        Optional<CacheService> serviceOptional = Container.getInstance().get(CacheService.class);
+        if (serviceOptional.isEmpty()) {
+            return;
+        }
+
+        CacheService service = serviceOptional.get();
+
         String originalCommand = executor.getCommand();
 
         //TextCommandProcessor processor = new TextCommandProcessor(context, this.dispatcher, s -> "HelloWorld");
-        if (instance.getAllCommando2t().containsKey(originalCommand)) {
-            String value = instance.getAllCommando2t().getValue(originalCommand);
+        if (service.containsOriginal(originalCommand)) {
+            String value = service.getTranslated(originalCommand);
 
             //processor.replaceTranslatedContextNode(value);
 
@@ -80,7 +99,7 @@ public class CB_CommandManagerMixin {
             return;
         }
 
-        if (instance.getAllCommando2t().containsValue(originalCommand)) return;
+        if (service.containsTranslated(originalCommand)) return;
         //TranslateStringResults right = processor.replaceTheContextNodeAndGetTranslateResult();
 
 /*
@@ -91,12 +110,18 @@ public class CB_CommandManagerMixin {
             return "HELLO WORLD!";
         });
 */
+
+        Optional<ITranslator> translatorOptional = Container.getInstance().get(ITranslator.class);
+        if (translatorOptional.isEmpty()) {
+            return;
+        }
+        ITranslator translator = translatorOptional.get();
         TranslateResults<?> translated = storage.translate(context, o -> {
             if (LanguageUtils.isChineseSentence(o, config.getChineseSentenceJudgmentRange())) {
                 return o;
             }
 
-            CompletableFuture<@NotNull String> future = CompletableFuture.supplyAsync(() -> Commandtranslator.translator.translation(o));
+            CompletableFuture<@NotNull String> future = CompletableFuture.supplyAsync(() -> translator.translation(o));
 
             return future.join();
         });
@@ -110,6 +135,6 @@ public class CB_CommandManagerMixin {
 
         executor.setCommand(s);
 
-        instance.getAllCommando2t().put(originalCommand, s);
+        service.put(originalCommand, s);
     }
 }

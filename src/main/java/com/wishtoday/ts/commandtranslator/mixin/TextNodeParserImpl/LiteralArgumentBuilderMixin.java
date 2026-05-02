@@ -10,6 +10,7 @@ import com.wishtoday.ts.commandtranslator.Helper.CommandTranslator.TextArgumentT
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
+import com.wishtoday.ts.commandtranslator.Services.Container;
 import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
 import net.minecraft.command.argument.MessageArgumentType;
 import net.minecraft.command.argument.TextArgumentType;
@@ -19,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mixin(LiteralArgumentBuilder.class)
 public class LiteralArgumentBuilderMixin {
@@ -27,24 +29,26 @@ public class LiteralArgumentBuilderMixin {
             , @Local final CommandNode<S> node
             , @Local final LiteralCommandNode<S> result) {
         if (!Commandtranslator.isModActive()) return;
-        TextCommandManager instance = TextCommandManager.getINSTANCE();
-        List<CommandNode<S>> list = CommandParseUtils.getAllChildrenAndItSelf(node);
-        for (CommandNode<S> commandNode : list) {
-            if (!(commandNode instanceof ArgumentCommandNode<?,?> argument)) {
-                LiteralCommandNode<?> literal = (LiteralCommandNode<?>) commandNode;
-                if (instance.containsCache(literal.getLiteral())) {
-                    //The latter will cover the former, but this is normal and has no effect.
-                    TextNodeTranslatorStorage<?> cache = instance.getCache(literal.getLiteral());
-                    instance.cacheCommand(result.getLiteral(), cache);
+        Optional<TextCommandManager> manager = Container.getInstance().get(TextCommandManager.class);
+        manager.ifPresent(textCommandManager -> {
+            List<CommandNode<S>> list = CommandParseUtils.getAllChildrenAndItSelf(node);
+            for (CommandNode<S> commandNode : list) {
+                if (!(commandNode instanceof ArgumentCommandNode<?,?> argument)) {
+                    LiteralCommandNode<?> literal = (LiteralCommandNode<?>) commandNode;
+                    if (textCommandManager.containsCache(literal.getLiteral())) {
+                        //The latter will cover the former, but this is normal and has no effect.
+                        TextNodeTranslatorStorage<?> cache = textCommandManager.getCache(literal.getLiteral());
+                        textCommandManager.cacheCommand(result.getLiteral(), cache);
+                    }
+                    return;
                 }
-                return;
+                if (argument.getType() instanceof TextArgumentType textNode) {
+                    textCommandManager.cacheCommand(result.getLiteral(), new TextNodeTranslatorStorage<>(argument.getName(), TextArgumentTranslator.INSTANCE));
+                }
+                if (argument.getType() instanceof MessageArgumentType messageNode) {
+                    textCommandManager.cacheCommand(result.getLiteral(), new TextNodeTranslatorStorage<>(argument.getName(), MessageFormatArgumentTranslator.INSTANCE));
+                }
             }
-            if (argument.getType() instanceof TextArgumentType textNode) {
-                instance.cacheCommand(result.getLiteral(), new TextNodeTranslatorStorage<>(argument.getName(), TextArgumentTranslator.INSTANCE));
-            }
-            if (argument.getType() instanceof MessageArgumentType messageNode) {
-                instance.cacheCommand(result.getLiteral(), new TextNodeTranslatorStorage<>(argument.getName(), MessageFormatArgumentTranslator.INSTANCE));
-            }
-        }
+        });
     }
 }

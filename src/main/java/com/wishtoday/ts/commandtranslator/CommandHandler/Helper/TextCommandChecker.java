@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.Helper;
+package com.wishtoday.ts.commandtranslator.CommandHandler.Helper;
 
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.tree.CommandNode;

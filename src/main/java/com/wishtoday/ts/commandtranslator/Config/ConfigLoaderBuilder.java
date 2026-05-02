@@ -33,7 +33,7 @@ public class ConfigLoaderBuilder {
     }
 
     public interface BuilderConfigLoaderStage<T> {
-        BuilderConfigLoaderStage<T> registerAttitudeAdapter(Class<? extends Attitude<?>> clazz, AttitudeAdapter<? extends Attitude<?>> attitudeAdapter);
+        BuilderConfigLoaderStage<T> registerAttitudeAdapter(Class<? extends Attitude> clazz, AttitudeAdapter<? extends Attitude> attitudeAdapter);
 
         BuilderConfigLoader<T> buildBuilderConfigLoader();
     }
@@ -46,7 +46,7 @@ public class ConfigLoaderBuilder {
                 Comparator.<FieldTypeAdapter<?>>comparingInt(FieldTypeAdapter::priority)
                         .thenComparing(a -> a.getClass().getName())
         );
-        private final Map<Class<? extends Attitude<?>>, AttitudeAdapter<? extends Attitude<?>>> attitudes = new ConcurrentHashMap<>();
+        private final Map<Class<? extends Attitude>, AttitudeAdapter<? extends Attitude>> attitudes = new ConcurrentHashMap<>();
 
         @Override
         public <A extends Annotation> AnnotationConfigLoaderStage<T> registerAnnotationAdapter(Class<A> clazz, AnnotationAdapter<A> annotationAdapter) {
@@ -58,7 +58,7 @@ public class ConfigLoaderBuilder {
         }
 
         @Override
-        public BuilderConfigLoaderStage<T> registerAttitudeAdapter(Class<? extends Attitude<?>> clazz, AttitudeAdapter<? extends Attitude<?>> attitudeAdapter) {
+        public BuilderConfigLoaderStage<T> registerAttitudeAdapter(Class<? extends Attitude> clazz, AttitudeAdapter<? extends Attitude> attitudeAdapter) {
             this.attitudes.put(clazz, attitudeAdapter);
             return this;
         }

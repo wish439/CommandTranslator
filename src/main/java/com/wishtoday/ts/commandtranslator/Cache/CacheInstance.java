@@ -1,33 +1,23 @@
 package com.wishtoday.ts.commandtranslator.Cache;
 
-import com.wishtoday.ts.commandtranslator.Commandtranslator;
+import com.wishtoday.ts.commandtranslator.Services.CreateConstruction;
 import lombok.Getter;
 
 @Getter
 public class CacheInstance {
-    private static CacheInstance INSTANCE;
 
     private ConcurrentBiHashMap<String, String> allCommando2t;
     //private ConcurrentBiHashMap<String, String> textNodeo2t;
 
-    public CacheInstance() {
-        this.allCommando2t = new ConcurrentBiHashMap<>();
-        //this.textNodeo2t = new ConcurrentBiHashMap<>();
-    }
-
-    public synchronized static CacheInstance getINSTANCE() {
-        if (INSTANCE == null) loadFromFileOrNew(Commandtranslator.dataSaver);
-        return INSTANCE;
-    }
-
-    private static void loadFromFileOrNew(DataSaver dataSaver) {
+    @CreateConstruction
+    public CacheInstance(DataSaver dataSaver) {
         CacheInstance load = dataSaver.load();
-        if (load == null) INSTANCE = new CacheInstance();
-        else INSTANCE = load;
-
-        if (INSTANCE.allCommando2t != null) {
-            INSTANCE.allCommando2t.rebuildReverseMap();
+        if (load != null) {
+            this.allCommando2t = load.allCommando2t;
+            return;
         }
+        this.allCommando2t = new ConcurrentBiHashMap<>();
+        allCommando2t.rebuildReverseMap();
     }
 
     @Override

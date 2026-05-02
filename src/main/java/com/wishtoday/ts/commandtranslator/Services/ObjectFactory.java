@@ -57,6 +57,7 @@ public class ObjectFactory {
         }
     }
 
+    @SuppressWarnings("OptionalAssignedToNull")
     private Optional<?> getObject(Class<?> type, ConfigValue configValue) {
         Optional<?> o = null;
         if (!TypeUtils.isSimpleType(type)) {

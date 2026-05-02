@@ -1,7 +1,9 @@
 package com.wishtoday.ts.commandtranslator.Processor;
 
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
-import com.wishtoday.ts.commandtranslator.http.IBatchTranslator;
+import com.wishtoday.ts.commandtranslator.Services.ConfigValue;
+import com.wishtoday.ts.commandtranslator.Services.CreateConstruction;
+import com.wishtoday.ts.commandtranslator.http.ITranslator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -17,7 +19,7 @@ public class BatchTranslatorProcessor implements FunctionProcessor<String, Compl
     private final long timeout;
     private long currentTime;
 
-    private final IBatchTranslator translator;
+    private final ITranslator translator;
 
     private final Queue<Task> queue;
     private final Map<String, CompletableFuture<String>> map;
@@ -26,7 +28,10 @@ public class BatchTranslatorProcessor implements FunctionProcessor<String, Compl
 
     private final AtomicBoolean processing = new AtomicBoolean(false);
 
-    public BatchTranslatorProcessor(int batchSize, long timeout, IBatchTranslator translator) {
+    @CreateConstruction
+    public BatchTranslatorProcessor(@ConfigValue("batchSize") int batchSize
+            , @ConfigValue("timeout") long timeout
+            , ITranslator translator) {
         this.batchSize = batchSize;
         this.timeout = timeout;
         this.queue = new ConcurrentLinkedQueue<>();

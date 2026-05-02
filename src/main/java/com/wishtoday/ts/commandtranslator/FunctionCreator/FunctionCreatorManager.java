@@ -7,8 +7,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class FunctionCreatorManager {
-    @Getter
-    private static FunctionCreatorManager instance = new FunctionCreatorManager();
 
     @Getter
     private final FunctionCreator creator;
@@ -16,7 +14,7 @@ public class FunctionCreatorManager {
     @Getter
     private final Set<Identifier> shouldCoverFunctions;
 
-    private FunctionCreatorManager() {
+    public FunctionCreatorManager() {
         shouldCoverFunctions = ConcurrentHashMap.newKeySet(10);
         creator = new FunctionCreator();
     }

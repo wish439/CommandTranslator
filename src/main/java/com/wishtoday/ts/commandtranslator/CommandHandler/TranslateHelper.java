@@ -2,7 +2,7 @@ package com.wishtoday.ts.commandtranslator.CommandHandler;
 
 import com.mojang.brigadier.context.StringRange;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
-import com.wishtoday.ts.commandtranslator.Config.Config;
+import com.wishtoday.ts.commandtranslator.Config.CopyToBuilderConfig;
 import com.wishtoday.ts.commandtranslator.Helper.Stringer.Stringer;
 import com.wishtoday.ts.commandtranslator.Processor.BatchTranslatorProcessor;
 import com.wishtoday.ts.commandtranslator.Util.LanguageUtils;
@@ -13,17 +13,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class TranslateHelper {
-     static Function<String, String> getDefaultTranslateStrategy(Config config, BatchTranslatorProcessor processor) {
+     static Function<String, String> getDefaultTranslateStrategy(CopyToBuilderConfig config, BatchTranslatorProcessor processor) {
         return s -> {
             if (LanguageUtils.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return s;
             if (LanguageUtils.isOnlySymbols(s)) return s;
             if (s.isBlank()) return s;
             try {
-                String join = processor
+                return processor
                         .submit(s)
                         .completeOnTimeout(s, 15, TimeUnit.SECONDS)
                         .join();
-                return join;
             } catch (CompletionException e) {
                 Commandtranslator.LOGGER.error("Translate failed for '{}'", s, e.getCause());
                 return s;
@@ -34,7 +33,7 @@ public class TranslateHelper {
         };
     }
 
-    static Function<String, CompletableFuture<String>> getDefaultAsyncTranslateStrategy(Config config, BatchTranslatorProcessor processor) {
+    static Function<String, CompletableFuture<String>> getDefaultAsyncTranslateStrategy(CopyToBuilderConfig config, BatchTranslatorProcessor processor) {
         return s -> {
             if (LanguageUtils.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return CompletableFuture.completedFuture(s);
             if (LanguageUtils.isOnlySymbols(s)) return CompletableFuture.completedFuture(s);

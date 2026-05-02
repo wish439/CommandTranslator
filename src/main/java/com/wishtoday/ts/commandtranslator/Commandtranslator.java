@@ -2,24 +2,22 @@ package com.wishtoday.ts.commandtranslator;
 
 import com.wishtoday.ts.commandtranslator.Cache.*;
 import com.wishtoday.ts.commandtranslator.Command.MainCommand;
-import com.wishtoday.ts.commandtranslator.Config.ABuilderConfig;
-import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.AnnotationAdapter.CommentAdapter;
-import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.AnnotationAdapter.NotDisplayInAdapter;
-import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.AnnotationAdapter.RangeAdapter;
-import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.AnnotationAdapter.TranslatableCommentAdapter;
-import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.TypeAdapter.*;
-import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.Comment;
-import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.NotDisplayIn;
-import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.Range;
-import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.TranslatableComment;
+import com.wishtoday.ts.commandtranslator.CommandHandler.CommandTranslationProvider;
+import com.wishtoday.ts.commandtranslator.CommandHandler.FunctionTranslationProvider;
+import com.wishtoday.ts.commandtranslator.Config.*;
+import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude.AttitudeAdapter.DisplayControlAttitudeAdapter;
+import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude.AttitudeAdapter.RangeAttitudeAdapter;
 import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude.AttitudeAdapter.TranslatableCommentAttitudeAdapter;
+import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude.DisplayControlAttitude;
+import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude.RangeAttitude;
 import com.wishtoday.ts.commandtranslator.Config.BuilderConfig.Attitude.TranslatableCommentAttitude;
-import com.wishtoday.ts.commandtranslator.Config.ConfigLoaderBuilder;
-import com.wishtoday.ts.commandtranslator.Config.IConfigLoader;
+import com.wishtoday.ts.commandtranslator.FunctionCreator.FunctionCreatorManager;
+import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
 import com.wishtoday.ts.commandtranslator.Processor.*;
+import com.wishtoday.ts.commandtranslator.Services.Container;
+import com.wishtoday.ts.commandtranslator.Services.ObjectFactory;
 import com.wishtoday.ts.commandtranslator.Translator.TranslatorFactory;
-import com.wishtoday.ts.commandtranslator.Config.Config;
-import com.wishtoday.ts.commandtranslator.http.ITranslators;
+import com.wishtoday.ts.commandtranslator.http.ITranslator;
 import lombok.Getter;
 import lombok.Setter;
 import net.fabricmc.api.ModInitializer;
@@ -30,29 +28,25 @@ import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 //Project TODO: Reduce static field, switch com.wishtoday.ts.commandtranslator.Services.Container
+//promoting
 public class Commandtranslator implements ModInitializer {
 
+    @Getter
+    private static final Commandtranslator Instance = new Commandtranslator();
+
     public static final Logger LOGGER = LoggerFactory.getLogger(Commandtranslator.class);
-    public static DataSaver dataSaver;
-    @Getter
-    private static CacheService cacheService;
-    @Getter
-    private static IConfigLoader<Config> configLoader;
+    private IConfigLoader<CopyToBuilderConfig> configLoader;
 
     public static final String MOD_ID = "commandtranslator";
 
-    @Getter
-    private static BatchTranslatorProcessor processor;
-
     public static final String CONFIG_FILE_NAME = "commandtranslator.toml";
     public static final String DataPackName = "zzzzz___generate";
-
-    public static ITranslators translator;
 
     @Getter
     @Setter
@@ -63,37 +57,31 @@ public class Commandtranslator implements ModInitializer {
 
         //if (loadConfig()) return;
 
-        configLoader = registerFieldTypeAdapters(
-                registerAnnotationAdapters(ConfigLoaderBuilder
-                .<Config>annotationConfigLoader())).buildAnnotationConfigLoader();
+        configLoader = ConfigLoaderBuilder
+                .<CopyToBuilderConfig>builderConfigLoader()
+                .registerAttitudeAdapter(TranslatableCommentAttitude.class, new TranslatableCommentAttitudeAdapter())
+                .registerAttitudeAdapter(RangeAttitude.class, new RangeAttitudeAdapter())
+                .registerAttitudeAdapter(DisplayControlAttitude.class, new DisplayControlAttitudeAdapter())
+                .buildBuilderConfigLoader();
 
-        IConfigLoader<ABuilderConfig> builderConfigLoader = ConfigLoaderBuilder
-                .<ABuilderConfig>builderConfigLoader()
-                        .registerAttitudeAdapter(TranslatableCommentAttitude.class, new TranslatableCommentAttitudeAdapter())
-                                .buildBuilderConfigLoader();
+        this.registerServices();
 
-        builderConfigLoader.load(ABuilderConfig::new, FabricLoader.getInstance().getConfigDir().resolve("testDir.toml"));
-
-        reload();
-
-        Config config = Config.getInstance();
-
-        translator = TranslatorFactory.builder()
-                .api(config.getProvider().getApi())
-                .key(config.getProvider().getKey())
-                .model(config.getModel())
-                .build().getTranslator(config.getType());
-
-        processor = new BatchTranslatorProcessor(config.getBatchSize(), config.getTimeout(), translator);
-
-        dataSaver = new JsonSaver();
         ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
-        Runnable runnable = () -> dataSaver.save(CacheInstance.getINSTANCE());
+        Optional<DataSaver> saver = Container.getInstance().get(DataSaver.class);
+        DataSaver dataSaver = saver.orElse(null);
+        assert dataSaver != null;
+        Optional<CacheService> serviceOptional = Container.getInstance().get(CacheService.class);
+        final CacheService cacheService = serviceOptional.orElse(null);
+        assert cacheService != null;
+        Runnable runnable = () -> dataSaver.save(cacheService.getCacheInstance());
+
+        Optional<BatchTranslatorProcessor> processorOptional = Container.getInstance().get(BatchTranslatorProcessor.class);
+        BatchTranslatorProcessor processor = processorOptional.orElse(null);
+        assert processor != null;
 
         ScheduledExecutorService service2 = Executors.newScheduledThreadPool(1);
-        service2.scheduleWithFixedDelay(() -> processor.tick(), 10, 10, TimeUnit.MILLISECONDS);
+        service2.scheduleWithFixedDelay(processor::tick, 10, 10, TimeUnit.MILLISECONDS);
 
-        cacheService = new CacheServiceImpl(CacheInstance.getINSTANCE());
         this.registerProcessor();
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             service.scheduleWithFixedDelay(runnable, 30, 60, TimeUnit.SECONDS);
@@ -104,20 +92,41 @@ public class Commandtranslator implements ModInitializer {
         this.registerCommands();
     }
 
-    private <T> ConfigLoaderBuilder.AnnotationConfigLoaderStage<T> registerAnnotationAdapters(ConfigLoaderBuilder.AnnotationConfigLoaderStage<T> stage) {
-        stage.registerAnnotationAdapter(Comment.class, new CommentAdapter());
-        stage.registerAnnotationAdapter(Range.class, new RangeAdapter());
-        stage.registerAnnotationAdapter(TranslatableComment.class, new TranslatableCommentAdapter());
-        stage.registerAnnotationAdapter(NotDisplayIn.class, new NotDisplayInAdapter());
-        return stage;
-    }
+    private void registerServices() {
+        Container instance = Container.getInstance();
+        CopyToBuilderConfig config = this.reload();
 
-    private <T> ConfigLoaderBuilder.AnnotationConfigLoaderStage<T> registerFieldTypeAdapters(ConfigLoaderBuilder.AnnotationConfigLoaderStage<T> stage) {
-        stage.registerFieldTypeAdapter(new SimpleFieldTypeAdapter());
-        stage.registerFieldTypeAdapter(new EnumFieldTypeAdapter());
-        stage.registerFieldTypeAdapter(new NullFieldTypeAdapter());
-        stage.registerFieldTypeAdapter(new ObjectTypeAdapter());
-        return stage;
+        instance.autoRegister(config);
+
+        ITranslator translator = TranslatorFactory.builder()
+                .api(config.getTranslateProvider().getApi())
+                .key(config.getTranslateProvider().getKey())
+                .model(config.getModel())
+                .build()
+                .getTranslator(config.getTranslateType());
+        instance.autoRegister(translator);
+
+        ObjectFactory factory = new ObjectFactory(instance, config);
+
+        Optional<BatchTranslatorProcessor> batchTranslatorProcessor = factory.create(BatchTranslatorProcessor.class);
+        batchTranslatorProcessor.ifPresent(instance::autoRegister);
+
+        instance.autoRegister(new JsonSaver());
+
+        Optional<CacheServiceImpl> cacheService = factory.create(CacheServiceImpl.class);
+
+        instance.autoRegister(cacheService);
+
+        TextCommandManager manager = new TextCommandManager();
+        instance.autoRegister(manager);
+        FunctionCreatorManager functionCreatorManager = new FunctionCreatorManager();
+        instance.autoRegister(functionCreatorManager);
+
+        Optional<CommandTranslationProvider> commandTranslationProvider = factory.create(CommandTranslationProvider.class);
+        commandTranslationProvider.ifPresent(instance::autoRegister);
+
+        Optional<FunctionTranslationProvider> functionTranslationProvider = factory.create(FunctionTranslationProvider.class);
+        functionTranslationProvider.ifPresent(instance::autoRegister);
     }
 
     private void registerCommands() {
@@ -127,25 +136,27 @@ public class Commandtranslator implements ModInitializer {
                 });
     }
 
-    public static void reload() {
-        Config load;
+    public CopyToBuilderConfig reload() {
+        CopyToBuilderConfig load;
         try {
-            load = configLoader.load(Config::new, FabricLoader.getInstance().getConfigDir().resolve(CONFIG_FILE_NAME));
+            load = this.configLoader.load(CopyToBuilderConfig::new, FabricLoader.getInstance().getConfigDir().resolve(CONFIG_FILE_NAME));
         } catch (Exception e) {
-            return;
+            return new CopyToBuilderConfig();
         }
 
         if (!modActive) {
-            load = null;
+            load = new CopyToBuilderConfig();
         }
-        Config.setConfig(load);
+        return load;
     }
 
     private void registerProcessor() {
+        Optional<BatchTranslatorProcessor> optional = Container.getInstance().get(BatchTranslatorProcessor.class);
+        BatchTranslatorProcessor processor = optional.get();
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             ProcessorHandler handler = ((ProcessorHandlerInterface) server).getProcessorHandler();
             handler.registerProcessor(new TranslationTaskProcessor(5, server));
-            handler.registerProcessor(getProcessor());
+            handler.registerProcessor(processor);
         });
     }
 

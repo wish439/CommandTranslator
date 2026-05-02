@@ -1,29 +1,22 @@
 package com.wishtoday.ts.commandtranslator.Processor;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.ParseResults;
-import com.mojang.brigadier.context.CommandContextBuilder;
-import com.mojang.brigadier.tree.CommandNode;
-import com.wishtoday.ts.commandtranslator.Cache.CacheInstance;
-import com.wishtoday.ts.commandtranslator.Commandtranslator;
-import com.wishtoday.ts.commandtranslator.Config.Config;
-import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
-import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
-import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
-import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
-import com.wishtoday.ts.commandtranslator.Util.TranslateUtils;
+import com.wishtoday.ts.commandtranslator.CommandHandler.CommandTranslationProvider;
+import com.wishtoday.ts.commandtranslator.Services.Container;
+import com.wishtoday.ts.commandtranslator.TranslateEnvironment;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.CommandBlockBlockEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.world.CommandBlockExecutor;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.*;
 
 //TODO: Remove command parse logic.use switch to com.wishtoday.ts.commandtranslator.CommandHandler
+//Completed
 public class TranslationTaskProcessor implements Processor<BlockEntity>{
 
     public TranslationTaskProcessor(int threads, MinecraftServer server) {
@@ -95,65 +88,13 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
             originalCommand = originalCommand.substring(1);
         }
 
-        CommandNode<ServerCommandSource> head =
-                CommandParseUtils.getNodeFromCommandHead(originalCommand, dispatcher);
+        Optional<CommandTranslationProvider> provider = Container.getInstance().get(CommandTranslationProvider.class);
 
-        if (head == null) return;
-
-        TextCommandManager manager = TextCommandManager.getINSTANCE();
-        String name = head.getName();
-        if (!"execute".equals(name) && !manager.containsCommand(name)) return;
-
-        ParseResults<ServerCommandSource> parse =
-                dispatcher.parse(originalCommand, commandExecutor.getSource());
-
-        CommandContextBuilder<ServerCommandSource> context = parse.getContext();
-
-        context = CommandParseUtils.changeToDeepest(context);
-
-        CommandNode<ServerCommandSource> headNode =
-                context.getNodes().getFirst().getNode();
-
-        if (!manager.containsCommand(headNode.getName())) return;
-        TextNodeTranslatorStorage<?> storage =
-                manager.getCommand(headNode.getName());
-        CacheInstance instance = CacheInstance.getINSTANCE();
-        if (instance.getAllCommando2t().containsKey(originalCommand)) {
-            String value = instance.getAllCommando2t().getValue(originalCommand);
-            server.execute(() -> commandExecutor.setCommand(value));
+        if (!provider.isPresent()) {
             return;
         }
+        CommandTranslationProvider translationProvider = provider.get();
 
-        Config config = Config.getInstance();
-
-        if (instance.getAllCommando2t().containsValue(originalCommand)) return;
-
-        ProcessorHandler handler = ((ProcessorHandlerInterface) server).getProcessorHandler();
-
-        CompletableFuture<? extends TranslateResults<?>> future = storage.translateAsync(context,
-                TranslateUtils.getDefaultAsyncTranslateStrategy(config,
-                        handler.getProcessor(BatchTranslatorProcessor.class).get()));
-        if (future == null) return;
-        String finalOriginalCommand = originalCommand;
-        future.thenAccept(result -> {
-                    if (result == null) return;
-
-                    String s = StringUtils.replaceEach(
-                            finalOriginalCommand,
-                            result.original(),
-                            result.translated()
-                    );
-                    if (finalOriginalCommand.equals(s)) return;
-
-                    Commandtranslator.LOGGER.info("submit the {} translated {}, CommandBlockPos:{}", finalOriginalCommand, s, commandBlock.getPos().toString());
-                    server.execute(() -> commandExecutor.setCommand(s));
-                    instance.getAllCommando2t().put(finalOriginalCommand, s);
-                })
-                .exceptionally(
-                        e -> {
-                            Commandtranslator.LOGGER.error("translate failed {}", finalOriginalCommand, e);
-                            return null;
-                        }
-                );
+        translationProvider.translateAsync(originalCommand, dispatcher, commandExecutor.getSource(), TranslateEnvironment.COMMAND_BLOCK);
     }
 }

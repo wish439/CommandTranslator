@@ -1,18 +1,14 @@
 package com.wishtoday.ts.commandtranslator.Manager;
 
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
-import lombok.Getter;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TextCommandManager {
-    @Getter
-    private static final TextCommandManager INSTANCE = new TextCommandManager();
 
-    private TextCommandManager() {
+    public TextCommandManager() {
         this.cacheTextNodeCommands = new ConcurrentHashMap<>();
         this.textNodeCommands = new ConcurrentHashMap<>();
     }

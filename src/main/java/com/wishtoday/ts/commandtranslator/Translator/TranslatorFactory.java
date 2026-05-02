@@ -14,10 +14,10 @@ public class TranslatorFactory {
     private String model;
     private int contextNumber;
 
-    public ITranslators getTranslator(@NotNull TranslatorType type) {
+    public ITranslator getTranslator(@NotNull TranslatorType type) {
         return switch (type) {
             case OPENAI -> new OpenAITranslator(api, key, model, contextNumber);
-            case DEEPL -> new DeepLTranslator(api, key);
+            case DEEPL -> new DeepLTranslator(key);
         };
     }
 }

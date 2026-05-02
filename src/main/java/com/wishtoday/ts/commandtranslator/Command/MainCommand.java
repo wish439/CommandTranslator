@@ -15,7 +15,7 @@ public class MainCommand {
                                 literal("reload")
                                         .executes(
                                                 context -> {
-                                                    Commandtranslator.reload();
+                                                    Commandtranslator.getInstance().reload();
                                                     return Command.SINGLE_SUCCESS;
                                                 }
                                         )

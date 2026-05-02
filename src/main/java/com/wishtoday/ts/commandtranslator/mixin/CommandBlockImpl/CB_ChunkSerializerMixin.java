@@ -1,10 +1,11 @@
 package com.wishtoday.ts.commandtranslator.mixin.CommandBlockImpl;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import com.wishtoday.ts.commandtranslator.Commandtranslator;
+import com.wishtoday.ts.commandtranslator.Config.CopyToBuilderConfig;
 import com.wishtoday.ts.commandtranslator.Processor.ProcessorHandlerInterface;
 import com.wishtoday.ts.commandtranslator.Processor.TranslationTaskProcessor;
-import com.wishtoday.ts.commandtranslator.Config.Config;
+import com.wishtoday.ts.commandtranslator.Services.Container;
+import com.wishtoday.ts.commandtranslator.TranslateEnvironment;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.CommandBlockBlockEntity;
 import net.minecraft.nbt.NbtCompound;
@@ -35,9 +36,13 @@ public class CB_ChunkSerializerMixin {
      */
     @Inject(method = "method_39797", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/WorldChunk;setBlockEntity(Lnet/minecraft/block/entity/BlockEntity;)V"))
     private static void method(NbtList nbtList, ServerWorld serverWorld, NbtList nbtList2, WorldChunk chunk, CallbackInfo ci, @Local BlockEntity blockEntity) {
-        Config config = Config.getInstance();
-        if (!config.isEnableTranslate() || !config.isTranslateCommandBlocks()) return;
-        if (config.getCommandBlockTranslateStrategy() != Config.CommandBlockTranslateStrategy.LOADING) return;
+        Optional<CopyToBuilderConfig> copyToBuilderConfig = Container.getInstance().get(CopyToBuilderConfig.class);
+        if (copyToBuilderConfig.isEmpty()) {
+            return;
+        }
+        CopyToBuilderConfig config = copyToBuilderConfig.get();
+        if (!config.canWorkOn(TranslateEnvironment.COMMAND_BLOCK)) return;
+        if (config.getCommandTranslateStrategy() != CopyToBuilderConfig.CommandBlockTranslateStrategy.LOADING) return;
         if (blockEntity == null) return;
         if (!(blockEntity instanceof CommandBlockBlockEntity)) return;
 

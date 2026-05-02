@@ -23,10 +23,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 public class BuilderConfigLoader<T> implements IConfigLoader<T> {
-    private final Map<Class<? extends Attitude<?>>, AttitudeAdapter<? extends Attitude<?>>> ATTITUDES;
+    private final Map<Class<? extends Attitude>, AttitudeAdapter<? extends Attitude>> ATTITUDES;
     private final Map<Class<?>, List<Field>> fields = new ConcurrentHashMap<>();
 
-    public BuilderConfigLoader(Map<Class<? extends Attitude<?>>, AttitudeAdapter<? extends Attitude<?>>> attitudes) {
+    public BuilderConfigLoader(Map<Class<? extends Attitude>, AttitudeAdapter<? extends Attitude>> attitudes) {
         this.ATTITUDES = attitudes;
     }
 
@@ -71,8 +71,6 @@ public class BuilderConfigLoader<T> implements IConfigLoader<T> {
                 continue;
             }
 
-            System.out.println("writing Field:" + field.getName());
-
             this.writeField(entry.toMutable(), config, new WritingContext("", field, obj, obj));
         }
     }
@@ -85,10 +83,10 @@ public class BuilderConfigLoader<T> implements IConfigLoader<T> {
         this.writeSimpleField(configEntry, config, context);
     }
 
-    private void writeSimpleField(MutableConfigEntry<?, ?> configEntry, CommentedFileConfig config, WritingContext context) throws IllegalAccessException {
+    private void writeSimpleField(MutableConfigEntry<?, ?> configEntry, CommentedFileConfig config, WritingContext context) {
         TreeSet<PriorityAttitude> adapters = configEntry.getAdapters();
         for (PriorityAttitude adapter : adapters) {
-            AttitudeAdapter<Attitude<?>> attitudeAdapter = (AttitudeAdapter<Attitude<?>>) ATTITUDES.get(adapter.attitude().getClass());
+            AttitudeAdapter<Attitude> attitudeAdapter = (AttitudeAdapter<Attitude>) ATTITUDES.get(adapter.attitude().getClass());
             attitudeAdapter.preRead(configEntry, config, adapter.attitude());
         }
         Field field = context.field();
@@ -100,7 +98,7 @@ public class BuilderConfigLoader<T> implements IConfigLoader<T> {
             o = configEntry.getDefaultValue();
         }
         for (PriorityAttitude adapter : adapters) {
-            AttitudeAdapter<Attitude<?>> attitudeAdapter = (AttitudeAdapter<Attitude<?>>) ATTITUDES.get(adapter.attitude().getClass());
+            AttitudeAdapter<Attitude> attitudeAdapter = (AttitudeAdapter<Attitude>) ATTITUDES.get(adapter.attitude().getClass());
             o = attitudeAdapter.processRead(configEntry, config, adapter.attitude(), o, name);
         }
         configEntry.setValue(o);
@@ -114,7 +112,7 @@ public class BuilderConfigLoader<T> implements IConfigLoader<T> {
 
     private void triggerPostWrite(MutableConfigEntry<?, ?> configEntry, CommentedFileConfig config, WritingContext context, TreeSet<PriorityAttitude> adapters, Field field, String name, Object o) {
         for (PriorityAttitude adapter : adapters) {
-            AttitudeAdapter<Attitude<?>> attitudeAdapter = (AttitudeAdapter<Attitude<?>>) ATTITUDES.get(adapter.attitude().getClass());
+            AttitudeAdapter<Attitude> attitudeAdapter = (AttitudeAdapter<Attitude>) ATTITUDES.get(adapter.attitude().getClass());
             attitudeAdapter.postWrite(configEntry, config, adapter.attitude(), new ConfigFieldInfo<>(name, o, field, new ConfigClassInfo<>(context.configObject)));
         }
     }
@@ -127,7 +125,7 @@ public class BuilderConfigLoader<T> implements IConfigLoader<T> {
         name = prefix.isEmpty() ? name : prefix + "." + name;
 
         for (PriorityAttitude adapter : adapters) {
-            AttitudeAdapter<Attitude<?>> attitudeAdapter = (AttitudeAdapter<Attitude<?>>) ATTITUDES.get(adapter.attitude().getClass());
+            AttitudeAdapter<Attitude> attitudeAdapter = (AttitudeAdapter<Attitude>) ATTITUDES.get(adapter.attitude().getClass());
             attitudeAdapter.preRead(configEntry, config, adapter.attitude());
         }
         List<MutableConfigEntry<?, ?>> children = configEntry.getChildren();

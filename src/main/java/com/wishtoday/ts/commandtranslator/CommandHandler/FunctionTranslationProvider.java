@@ -5,7 +5,9 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.ContextChain;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.wishtoday.ts.commandtranslator.Config.Config;
+import com.wishtoday.ts.commandtranslator.FunctionCreator.FunctionCreatorManager;
+import com.wishtoday.ts.commandtranslator.Services.CreateConstruction;
+import com.wishtoday.ts.commandtranslator.TranslateEnvironment;
 import net.minecraft.command.SingleCommandAction;
 import net.minecraft.command.SourcedCommandAction;
 import net.minecraft.server.command.CommandManager;
@@ -24,12 +26,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 //TODO: complete this class.
+//complete....?Maybe....
 public class FunctionTranslationProvider {
 
     private final CommandTranslationProvider commandTranslationProvider;
+    private final FunctionCreatorManager functionCreatorManager;
 
-    public FunctionTranslationProvider(CommandTranslationProvider commandTranslationProvider) {
+    @CreateConstruction
+    public FunctionTranslationProvider(CommandTranslationProvider commandTranslationProvider, FunctionCreatorManager functionCreatorManager) {
         this.commandTranslationProvider = commandTranslationProvider;
+        this.functionCreatorManager = functionCreatorManager;
     }
 
     public CompletableFuture<CommandFunction<ServerCommandSource>> create(Identifier id, CommandDispatcher<ServerCommandSource> dispatcher, ServerCommandSource source, List<String> lines, Executor executor) throws IllegalArgumentException {
@@ -122,12 +128,13 @@ public class FunctionTranslationProvider {
 
     @NotNull
     private CompletableFuture<SourcedCommandAction<ServerCommandSource>> parseAsync(CommandDispatcher<ServerCommandSource> dispatcher, ServerCommandSource source, StringReader reader, Identifier id, Executor executor) throws CommandSyntaxException {
-        CompletableFuture<String> future = commandTranslationProvider.getTranslationAsync(reader.getString(), dispatcher, source, id, Config.Environment.FUNCTION);
-        if (future == null) {
-            return CompletableFuture.completedFuture(CommandFunction.parse(dispatcher, source, reader));
-            //return null;
+        CompletableFuture<String> future = commandTranslationProvider.translateAsync(reader.getString(), dispatcher, source, TranslateEnvironment.FUNCTION);
+        if (!(future.isDone() &&
+                !future.isCancelled() &&
+                future.getNow(reader.getString()).equals(reader.getString()))) {
+            functionCreatorManager.getShouldCoverFunctions().add(id);
         }
-        CompletableFuture<SourcedCommandAction<ServerCommandSource>> apply = future.thenApply(s -> {
+        return future.thenApply(s -> {
             if (s == null) {
                 try {
                     throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand().create();
@@ -156,6 +163,5 @@ public class FunctionTranslationProvider {
             //System.out.println("Exception caught while trying to parse the command line: ?:" + "original command:" + reader.getString());
             throw new RuntimeException(t);
         });
-        return apply;
     }
 }

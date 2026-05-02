@@ -2,10 +2,11 @@ package com.wishtoday.ts.commandtranslator.Cache;
 
 import org.jetbrains.annotations.Nullable;
 
-public class CacheServiceImpl implements CacheService {
-    private final CacheInstance instance;
-    public CacheServiceImpl(CacheInstance instance) {
-        this.instance = instance;
+public record CacheServiceImpl(CacheInstance instance) implements CacheService {
+
+    @Override
+    public CacheInstance getCacheInstance() {
+        return instance;
     }
 
     @Override

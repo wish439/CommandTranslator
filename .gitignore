@@ -3,6 +3,7 @@
 /build/
 /build/classes/java/main/
 /patches/
+/logs/
 
 run
 build

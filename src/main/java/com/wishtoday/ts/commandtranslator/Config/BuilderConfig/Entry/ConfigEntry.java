@@ -56,9 +56,9 @@ public record ConfigEntry<E, T>(MutableConfigEntry<E, T> mutableConfigEntry) {
     }
 
     public interface OtherSetStage<E, T> {
-        OtherSetStage<E, T> adapter(Attitude<?> attitude);
+        OtherSetStage<E, T> adapter(Attitude attitude);
 
-        OtherSetStage<E, T> adapter(Attitude<?> attitude, int priority);
+        OtherSetStage<E, T> adapter(Attitude attitude, int priority);
 
         OtherSetStage<E, T> child(ConfigEntry<?, ?> entry);
 
@@ -70,8 +70,8 @@ public record ConfigEntry<E, T>(MutableConfigEntry<E, T> mutableConfigEntry) {
     public static class Builder<E, T> implements MustSetStage<E, T>, OtherSetStage<E, T> {
         private String serializedName;
         private T defaultValue;
-        private TreeSet<PriorityAttitude> adapters;
-        private List<ConfigEntry<?, ?>> children;
+        private final TreeSet<PriorityAttitude> adapters;
+        private final List<ConfigEntry<?, ?>> children;
         private BiConsumer<E, T> setter;
 
         public Builder() {
@@ -79,7 +79,7 @@ public record ConfigEntry<E, T>(MutableConfigEntry<E, T> mutableConfigEntry) {
             this.defaultValue = null;
             this.adapters = new TreeSet<>(
                     Comparator.comparingInt(PriorityAttitude::priority)
-                            .thenComparing(a -> a.getClass().getName())
+                            .thenComparing(System::identityHashCode)
             );
             this.children = new ArrayList<>();
             this.setter = null;
@@ -98,13 +98,13 @@ public record ConfigEntry<E, T>(MutableConfigEntry<E, T> mutableConfigEntry) {
             return this;
         }
 
-        public OtherSetStage<E, T> adapter(Attitude<?> attitude) {
-            this.adapters.add(new PriorityAttitude(attitude, 1));
-            return this;
+        public OtherSetStage<E, T> adapter(Attitude attitude) {
+            return this.adapter(attitude, 1);
         }
 
-        public OtherSetStage<E, T> adapter(Attitude<?> attitude, int priority) {
-            this.adapters.add(new PriorityAttitude(attitude, priority));
+        public OtherSetStage<E, T> adapter(Attitude attitude, int priority) {
+            PriorityAttitude priorityAttitude = new PriorityAttitude(attitude, priority);
+            this.adapters.add(priorityAttitude);
             return this;
         }
 
