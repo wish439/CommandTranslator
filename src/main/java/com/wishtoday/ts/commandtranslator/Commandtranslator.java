@@ -155,7 +155,10 @@ public class Commandtranslator implements ModInitializer {
         BatchTranslatorProcessor processor = optional.get();
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             ProcessorHandler handler = ((ProcessorHandlerInterface) server).getProcessorHandler();
-            handler.registerProcessor(new TranslationTaskProcessor(5, server));
+            Optional<CommandTranslationProvider> provider = Container.getInstance().get(CommandTranslationProvider.class);
+            provider.ifPresent(
+                    a -> handler.registerProcessor(new TranslationTaskProcessor(5, server, a))
+            );
             handler.registerProcessor(processor);
         });
     }

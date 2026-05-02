@@ -17,14 +17,12 @@ import com.wishtoday.ts.commandtranslator.CommandHandler.Helper.CacheCommandChec
 import com.wishtoday.ts.commandtranslator.CommandHandler.Helper.TextCommandChecker;
 import com.wishtoday.ts.commandtranslator.Manager.TextCommandManager;
 import com.wishtoday.ts.commandtranslator.Processor.BatchTranslatorProcessor;
-import com.wishtoday.ts.commandtranslator.Services.Container;
 import com.wishtoday.ts.commandtranslator.Services.CreateConstruction;
 import com.wishtoday.ts.commandtranslator.TranslateEnvironment;
 import com.wishtoday.ts.commandtranslator.Util.CommandParseUtils;
 import net.minecraft.server.command.ServerCommandSource;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -32,21 +30,20 @@ public class CommandTranslationProvider {
     private final BatchTranslatorProcessor processor;
     private final TextCommandManager textCommandManager;
     private final CacheService cacheService;
+    private final ApplicationConfig config;
     @CreateConstruction
-    public CommandTranslationProvider(BatchTranslatorProcessor processor, TextCommandManager textCommandManager, CacheService cacheService) {
+    public CommandTranslationProvider(BatchTranslatorProcessor processor, TextCommandManager textCommandManager, CacheService cacheService, ApplicationConfig config) {
         this.processor = processor;
         this.textCommandManager = textCommandManager;
         this.cacheService = cacheService;
+        this.config = config;
     }
 
     public @NotNull CompletableFuture<String> translateAsync(String string, CommandDispatcher<ServerCommandSource> dispatcher, ServerCommandSource source, TranslateEnvironment environment) {
         //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage -A");
         if (!Commandtranslator.isModActive()) return CompletableFuture.completedFuture(string);
         //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage -B");
-        Optional<ApplicationConfig> configOptional = Container.getInstance().get(ApplicationConfig.class);
-        if (configOptional.isEmpty()) return CompletableFuture.completedFuture(string);
-        ApplicationConfig config = configOptional.get();
-        if (!config.canWorkOn(environment)) return CompletableFuture.completedFuture(string);
+        if (!this.config.canWorkOn(environment)) return CompletableFuture.completedFuture(string);
         ParseResults<ServerCommandSource> parse = dispatcher.parse(string, source);
 
         BooleanCommandChecker<TextCommandManager> textCommandChecker = new TextCommandChecker();

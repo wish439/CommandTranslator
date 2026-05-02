@@ -2,7 +2,7 @@ package com.wishtoday.ts.commandtranslator.Processor;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.wishtoday.ts.commandtranslator.CommandHandler.CommandTranslationProvider;
-import com.wishtoday.ts.commandtranslator.Services.Container;
+import com.wishtoday.ts.commandtranslator.Services.CreateConstruction;
 import com.wishtoday.ts.commandtranslator.TranslateEnvironment;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.CommandBlockBlockEntity;
@@ -11,7 +11,6 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.world.CommandBlockExecutor;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.*;
 
@@ -19,7 +18,9 @@ import java.util.concurrent.*;
 //Completed
 public class TranslationTaskProcessor implements Processor<BlockEntity>{
 
-    public TranslationTaskProcessor(int threads, MinecraftServer server) {
+    @CreateConstruction
+    public TranslationTaskProcessor(int threads, MinecraftServer server, CommandTranslationProvider provider) {
+        this.provider = provider;
         int max = Math.max(threads, 1);
 
         this.executorSize = max;
@@ -53,6 +54,7 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
     private final MinecraftServer server;
     private final CommandDispatcher<ServerCommandSource> dispatcher;
     private final Queue<BlockEntity> queue;
+    private final CommandTranslationProvider provider;
 
 
     @Override
@@ -88,13 +90,7 @@ public class TranslationTaskProcessor implements Processor<BlockEntity>{
             originalCommand = originalCommand.substring(1);
         }
 
-        Optional<CommandTranslationProvider> provider = Container.getInstance().get(CommandTranslationProvider.class);
 
-        if (!provider.isPresent()) {
-            return;
-        }
-        CommandTranslationProvider translationProvider = provider.get();
-
-        translationProvider.translateAsync(originalCommand, dispatcher, commandExecutor.getSource(), TranslateEnvironment.COMMAND_BLOCK);
+        provider.translateAsync(originalCommand, dispatcher, commandExecutor.getSource(), TranslateEnvironment.COMMAND_BLOCK);
     }
 }
