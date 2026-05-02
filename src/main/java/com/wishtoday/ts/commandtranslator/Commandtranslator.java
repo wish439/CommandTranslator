@@ -115,7 +115,7 @@ public class Commandtranslator implements ModInitializer {
 
         Optional<CacheServiceImpl> cacheService = factory.create(CacheServiceImpl.class);
 
-        instance.autoRegister(cacheService);
+        cacheService.ifPresent(instance::autoRegister);
 
         TextCommandManager manager = new TextCommandManager();
         instance.autoRegister(manager);

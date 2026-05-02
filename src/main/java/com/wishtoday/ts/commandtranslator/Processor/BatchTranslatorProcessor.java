@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BatchTranslatorProcessor implements FunctionProcessor<String, CompletableFuture<String>>{
     private final int batchSize;
-    private final long timeout;
+    private final int timeout;
     private long currentTime;
 
     private final ITranslator translator;
@@ -30,7 +30,7 @@ public class BatchTranslatorProcessor implements FunctionProcessor<String, Compl
 
     @CreateConstruction
     public BatchTranslatorProcessor(@ConfigValue("batchSize") int batchSize
-            , @ConfigValue("timeout") long timeout
+            , @ConfigValue("timeout") int timeout
             , ITranslator translator) {
         this.batchSize = batchSize;
         this.timeout = timeout;

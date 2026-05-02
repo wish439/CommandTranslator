@@ -101,6 +101,10 @@ public class BuilderConfigLoader<T> implements IConfigLoader<T> {
             AttitudeAdapter<Attitude> attitudeAdapter = (AttitudeAdapter<Attitude>) ATTITUDES.get(adapter.attitude().getClass());
             o = attitudeAdapter.processRead(configEntry, config, adapter.attitude(), o, name);
         }
+        if (configEntry.getDefaultValue().getClass().isEnum()
+                && o instanceof String s) {
+            o = Enum.valueOf((Class<Enum>) configEntry.getDefaultValue().getClass(), s);
+        }
         configEntry.setValue(o);
         configEntry.applySetter(context.parentObject, o);
 

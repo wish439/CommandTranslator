@@ -350,27 +350,27 @@ public class CopyToBuilderConfig implements MultiLanguageConfig, ValuableConfig,
         return this.getConfigValue(this, key, type);
     }
 
-    public <T> Optional<T> getConfigValue(Object obj, String key, Class<T> type) throws ReflectiveOperationException {
-        ConfigPathReader reader = new ConfigPathReader(key);
-        if (!reader.hasNextPath()) return Optional.empty();
-        String s = reader.readNextPath();
-        Class<?> aClass = obj.getClass();
-        Field field = aClass.getDeclaredField(s);
-        Object o = field.get(obj);
-        if (!(o instanceof ConfigEntry<?, ?> entry)) {
-            return Optional.empty();
+        private <T> Optional<T> getConfigValue(Object obj, String key, Class<T> type) throws ReflectiveOperationException {
+            ConfigPathReader reader = new ConfigPathReader(key);
+            if (!reader.hasNextPath()) return Optional.empty();
+            String s = reader.readNextPath();
+            Class<?> aClass = obj.getClass();
+            Field field = aClass.getDeclaredField(s);
+            Object o = field.get(obj);
+            if (!(o instanceof ConfigEntry<?, ?> entry)) {
+                return Optional.empty();
+            }
+
+            Object value = entry.getValue();
+
+            //逆天Class#isAssignableFrom,int跟Integer给我返回false
+            if (ClassUtils.isAssignable(type, value.getClass())) {
+                return Optional.of((T) value);
+            }
+            return getConfigValue(value, type, reader);
         }
 
-        Object value = entry.getValue();
-
-        //逆天Class#isAssignableFrom,int跟Integer给我返回false
-        if (ClassUtils.isAssignable(type, value.getClass())) {
-            return Optional.of((T) value);
-        }
-        return getConfigValue(value, type, reader);
-    }
-
-    public <T> Optional<T> getConfigValue(Object obj, Class<T> type, ConfigPathReader reader) throws ReflectiveOperationException {
+    private <T> Optional<T> getConfigValue(Object obj, Class<T> type, ConfigPathReader reader) throws ReflectiveOperationException {
         if (!reader.hasNextPath()) return Optional.empty();
         String s = reader.readNextPath();
         Class<?> aClass = obj.getClass();

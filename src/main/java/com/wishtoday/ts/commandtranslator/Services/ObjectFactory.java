@@ -49,9 +49,12 @@ public class ObjectFactory {
                     Commandtranslator.LOGGER.error("Recursion is too deep, stopped.", new RecursionDeepException());
                     return Optional.empty();
                 }
+                System.out.println(type.getSimpleName());
+                System.out.println("Into C");
                 Optional<?> t = this.create(type, ++depth);
                 t.ifPresent(args::add);
             }
+            System.out.println(args);
             return Optional.of((T) constructor.newInstance(args.toArray()));
         } catch (Exception e) {
             Commandtranslator.LOGGER.error("threw a exception when created {}", clazz.getName(), e);
@@ -61,11 +64,17 @@ public class ObjectFactory {
 
     @SuppressWarnings("OptionalAssignedToNull")
     private Optional<?> getObject(Class<?> type, ConfigValue configValue) throws ReflectiveOperationException {
-        Optional<?> o = null;
+        Optional<?> o = Optional.empty();
         if (!TypeUtils.isSimpleType(type)) {
+            System.out.println(type.getSimpleName());
+            System.out.println("Into A");
             o = this.container.get(type);
+            System.out.println(o);
         }
-        if ((o == null || o.isEmpty()) && TypeUtils.isSimpleType(type) && configValue != null) {
+        if (o.isEmpty() && TypeUtils.isSimpleType(type) && configValue != null) {
+            System.out.println(type.getSimpleName());
+            System.out.println("Into B");
+            System.out.println(configValue.value());
             o = this.valuableConfig.getConfigValue(configValue.value(), type);
         }
         return o == null || o.isEmpty() ? Optional.empty() : o;

@@ -26,6 +26,9 @@ public class ConfigPathReader {
     }
 
     public String readNextPath() {
+        if (this.cursor >= this.string.length()) {
+            return null;
+        }
         if (this.string.charAt(this.cursor) == '.') {
             this.cursor++;
         }
