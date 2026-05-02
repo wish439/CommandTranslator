@@ -32,7 +32,6 @@ public class MainTest {
                 .registerAttitudeAdapter(TranslatableCommentAttitude.class, new TranslatableCommentAttitudeAdapter())
                 .buildBuilderConfigLoader();
         TestConfig load = builderConfigLoader.load(TestConfig::new, Path.of("F:\\My_Minecraft_Mod\\CommandTranslator\\run\\config\\testDir.toml"));
-        System.out.println(load.getTestEnum().getValue());
         Container instance = Container.getInstance();
         ObjectFactory factory = new ObjectFactory(instance, load);
         Optional<DeeplyService> service = factory.create(DeeplyService.class);

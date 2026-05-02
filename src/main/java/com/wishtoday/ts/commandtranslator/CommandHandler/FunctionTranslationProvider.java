@@ -5,6 +5,7 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.ContextChain;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.FunctionCreator.FunctionCreatorManager;
 import com.wishtoday.ts.commandtranslator.Services.CreateConstruction;
 import com.wishtoday.ts.commandtranslator.TranslateEnvironment;
@@ -160,7 +161,7 @@ public class FunctionTranslationProvider {
                 return (SourcedCommandAction<ServerCommandSource>) new SingleCommandAction.Sourced<>(s, optional.get());
             }
         }).exceptionally(t -> {
-            //System.out.println("Exception caught while trying to parse the command line: ?:" + "original command:" + reader.getString());
+            Commandtranslator.LOGGER.errorWithCaller("Exception caught while trying to parse the command line: ?:" + "original command: {}", reader.getString(), t);
             throw new RuntimeException(t);
         });
     }

@@ -71,9 +71,7 @@ public class CommandTranslationProvider {
         TextNodeTranslatorStorage<?> storage = textCommandManager.getCommand(headNode.getName());
 
         if (storage == null) return CompletableFuture.completedFuture(string);
-        //CompletableFuture<? extends TranslateResults<?>> translated = storage.translateAsync(context, TranslateUtils.getDefaultAsyncTranslateStrategy(config, processor));
         Function<String, CompletableFuture<String>> listener = s -> CompletableFuture.completedFuture("HelloWorld");
-        //System.out.println("Into listener" + string);
         CompletableFuture<? extends TranslateResults<?>> translated = storage.translateAsync(context, listener);
         ParsedArgument<ServerCommandSource, ?> argument = context.getArguments().get(storage.argumentName());
         if (argument == null) {
@@ -84,14 +82,9 @@ public class CommandTranslationProvider {
 
         return translated.thenApply(result -> {
             if (result == null) return string;
-            //String s = StringUtils.replaceEach(string, result.original(), result.translated());
             String s = TranslateHelper.getReplacedCommand(string, range, result.getResult());
-            //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage D data:{}", s);
-
-            //System.out.println("processAsync processed:" + s);
             if (string.equals(s)) return string;
 
-            //Commandtranslator.LOGGER.info("FC_CommandFunctionMixin.parse called stage E data:{}, {}, {}", id, s, reader.getString());
 
             cacheService.put(string, s);
 

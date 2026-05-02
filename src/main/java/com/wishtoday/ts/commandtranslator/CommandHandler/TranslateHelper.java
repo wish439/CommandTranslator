@@ -5,7 +5,6 @@ import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import com.wishtoday.ts.commandtranslator.Config.CopyToBuilderConfig;
 import com.wishtoday.ts.commandtranslator.Helper.Stringer.Stringer;
 import com.wishtoday.ts.commandtranslator.Processor.BatchTranslatorProcessor;
-import com.wishtoday.ts.commandtranslator.Util.LanguageUtils;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -15,8 +14,8 @@ import java.util.function.Function;
 public class TranslateHelper {
      static Function<String, String> getDefaultTranslateStrategy(CopyToBuilderConfig config, BatchTranslatorProcessor processor) {
         return s -> {
-            if (LanguageUtils.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return s;
-            if (LanguageUtils.isOnlySymbols(s)) return s;
+            if (LanguageHelper.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return s;
+            if (LanguageHelper.isOnlySymbols(s)) return s;
             if (s.isBlank()) return s;
             try {
                 return processor
@@ -35,8 +34,8 @@ public class TranslateHelper {
 
     static Function<String, CompletableFuture<String>> getDefaultAsyncTranslateStrategy(CopyToBuilderConfig config, BatchTranslatorProcessor processor) {
         return s -> {
-            if (LanguageUtils.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return CompletableFuture.completedFuture(s);
-            if (LanguageUtils.isOnlySymbols(s)) return CompletableFuture.completedFuture(s);
+            if (LanguageHelper.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return CompletableFuture.completedFuture(s);
+            if (LanguageHelper.isOnlySymbols(s)) return CompletableFuture.completedFuture(s);
             //if (s.isBlank()) return CompletableFuture.completedFuture(s);
             return processor.submit(s);
         };

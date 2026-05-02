@@ -1,8 +1,8 @@
-package com.wishtoday.ts.commandtranslator.Util;
+package com.wishtoday.ts.commandtranslator.CommandHandler;
 
 //TODO: Move this class to other package.
-public class LanguageUtils {
-    public static boolean isChineseSentence(String sentence, double range) {
+public class LanguageHelper {
+    static boolean isChineseSentence(String sentence, double range) {
         if (range < 0) {
             return false;
         }
@@ -29,7 +29,7 @@ public class LanguageUtils {
         return ((double) han / total) > range;
     }
 
-    public static boolean isOnlySymbols(String str) {
+    static boolean isOnlySymbols(String str) {
         if (str == null || str.isEmpty()) {
             return true;
         }
@@ -43,7 +43,7 @@ public class LanguageUtils {
         return true;
     }
 
-    private static boolean isSemanticCharacter(char c) {
+    static boolean isSemanticCharacter(char c) {
         if (Character.isLetterOrDigit(c)) {
             return true;
         }

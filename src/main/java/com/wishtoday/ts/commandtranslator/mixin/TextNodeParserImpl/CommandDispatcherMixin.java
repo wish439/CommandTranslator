@@ -44,7 +44,7 @@ public class CommandDispatcherMixin {
             TextNodeTranslatorStorage<?> cache = textCommandManager.getCache(literal);
             textCommandManager.addCommand(literal, cache);
             textCommandManager.clearCache();
-            System.out.println(literal);
+            Commandtranslator.LOGGER.info("accept command {}", literal);
         });
 
     }

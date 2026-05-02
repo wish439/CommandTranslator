@@ -44,7 +44,6 @@ public class CB_ChunkSerializerMixin {
         }
         CopyToBuilderConfig config = copyToBuilderConfig.get();
         if (!config.canWorkOn(TranslateEnvironment.COMMAND_BLOCK)) return;
-        if (config.getCommandTranslateStrategy() != CopyToBuilderConfig.CommandBlockTranslateStrategy.LOADING) return;
         if (blockEntity == null) return;
         if (!(blockEntity instanceof CommandBlockBlockEntity)) return;
 

@@ -49,7 +49,6 @@ public class JsonSaver implements DataSaver {
             Commandtranslator.LOGGER.error("JsonSaver throw{}", e.getMessage());
         }
 
-        //System.out.println(this.gson.toJson(data));
     }
 
     @Nullable

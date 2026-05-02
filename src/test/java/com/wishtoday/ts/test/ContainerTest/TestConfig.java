@@ -128,8 +128,6 @@ public class TestConfig implements ValuableConfig {
 
         Object value = entry.getValue();
 
-        System.out.println(value.getClass());
-        System.out.println(type);
         if (ClassUtils.isAssignable(type, value.getClass())) {
             return Optional.of((T) value);
         }

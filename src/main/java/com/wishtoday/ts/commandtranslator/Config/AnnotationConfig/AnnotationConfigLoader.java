@@ -86,53 +86,6 @@ public class AnnotationConfigLoader<T> implements IConfigLoader<T> {
 
             String key = prefix + name;
             Object value = field.get(obj);
-            Class<?> type = field.getType();
-
-
-
-            /*for (Map.Entry<Class<? extends Annotation>, AnnotationAdapter<? extends Annotation>> entry : annotationAdapters.entrySet()) {
-                AnnotationInfo<?, Comment> info = new AnnotationInfo<>(key, value, field, comment, new ConfigClassInfo<>(obj.getClass().getName(), obj, obj.getClass()));
-                AnnotationAdapter<? extends Annotation> adapter = entry.getValue();
-                adapter.apply(config, info);
-            }*/
-            /*Comment comment = field.getAnnotation(Comment.class);
-
-            if (comment != null) {
-                //System.out.println(comment.value());
-                config.setComment(key, filterUnblank("\n", comment.value()));
-            }
-
-            if (isSimpleType(instance)) {
-
-                if (!config.contains(key)) {
-                    config.set(key, value);
-                }
-
-                Object read = config.get(key);
-
-                Range range = field.getAnnotation(Range.class);
-                if (range != null && read instanceof Number n) {
-                    read = clampNumber(n, range, instance);
-                }
-
-                if (instance.isEnum() && read != null) {
-                    read = Enum.valueOf((Class<Enum>) instance, read.toString());
-                }
-
-                field.set(obj, read);
-                continue;
-            }*/
-
-            /*if (List.class.isAssignableFrom(instance)) {
-
-                if (!config.contains(key)) {
-                    config.set(key, value);
-                }
-
-                Object read = config.get(key);
-                field.set(obj, read);
-                continue;
-            }*/
 
             for (FieldTypeAdapter<?> fieldTypeAdapter : this.fieldTypeAdapters) {
                 ConfigFieldInfo<Object> objectConfigFieldInfo = new ConfigFieldInfo<>(key, value, field, new ConfigClassInfo<>(obj));

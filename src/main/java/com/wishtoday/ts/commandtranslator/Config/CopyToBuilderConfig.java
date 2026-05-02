@@ -182,28 +182,6 @@ public class CopyToBuilderConfig implements MultiLanguageConfig, ValuableConfig,
                             .build())
                     .build();
 
-    private final ConfigEntry<CopyToBuilderConfig, CommandBlockTranslateStrategy> commandBlockTranslateStrategy =
-            ConfigEntry.<CopyToBuilderConfig, CommandBlockTranslateStrategy>builder()
-                    .serializedName("commandBlockTranslateStrategy")
-                    .defaultValue(CommandBlockTranslateStrategy.LOADING)
-                    .adapter(TranslatableCommentAttitude.builder()
-                            .comment("cn", """
-                                    翻译命令方块的策略
-                                    可选:
-                                    TRIGGER -触发时翻译,触发时可能会卡
-                                    LOADING -加载后每tick翻译定量命令方块
-                                    """
-                            )
-                            .comment("en", """
-                                    Strategies for translating command blocks
-                                    Optional:
-                                    TRIGGER - Translate when triggered, may get stuck when triggered
-                                    LOADING - Translate quantitative command blocks per tick after loading
-                                    """
-                            )
-                            .build())
-                    .build();
-
     private final ConfigEntry<CopyToBuilderConfig, Double> ChineseSentenceJudgmentRange =
             ConfigEntry.<CopyToBuilderConfig, Double>builder()
                     .serializedName("ChineseSentenceJudgmentRange")
@@ -313,10 +291,6 @@ public class CopyToBuilderConfig implements MultiLanguageConfig, ValuableConfig,
         return this.ChineseSentenceJudgmentRange.getValue();
     }
 
-    public CommandBlockTranslateStrategy getCommandTranslateStrategy() {
-        return this.commandBlockTranslateStrategy.getValue();
-    }
-
     @Override
     public String toString() {
         return "CopyToBuilderConfig{" +
@@ -329,7 +303,6 @@ public class CopyToBuilderConfig implements MultiLanguageConfig, ValuableConfig,
                 ", enableTranslate=" + enableTranslate +
                 ", translateFunctions=" + translateFunctions +
                 ", translateCommandBlocks=" + translateCommandBlocks +
-                ", commandBlockTranslateStrategy=" + commandBlockTranslateStrategy +
                 ", ChineseSentenceJudgmentRange=" + ChineseSentenceJudgmentRange +
                 ", batchSize=" + batchSize +
                 ", timeout=" + timeout +
@@ -425,11 +398,6 @@ public class CopyToBuilderConfig implements MultiLanguageConfig, ValuableConfig,
     public enum MatchMode {
         WHITELIST,
         BLACKLIST
-    }
-
-    public enum CommandBlockTranslateStrategy {
-        TRIGGER,
-        LOADING
     }
 
 

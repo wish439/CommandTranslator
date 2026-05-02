@@ -8,7 +8,6 @@
     "Accessor.ServerCommandSourceAccessor",
     "Accessor.CommandFunction.ExpandedMacroAccessor",
     "CommandBlockImpl.CB_ChunkSerializerMixin",
-    "CommandBlockImpl.CB_CommandManagerMixin",
     "FunctionImpl.FC_CommandFunctionManagerMixin",
     "FunctionImpl.FC_FunctionLoaderMixin",
     "TextNodeParserImpl.CommandDispatcherMixin",
