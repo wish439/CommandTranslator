@@ -12,9 +12,8 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-//TODO: remove this class, switch
 public class TranslateHelper {
-    public static Function<String, String> getDefaultTranslateStrategy(Config config, BatchTranslatorProcessor processor) {
+     static Function<String, String> getDefaultTranslateStrategy(Config config, BatchTranslatorProcessor processor) {
         return s -> {
             if (LanguageUtils.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return s;
             if (LanguageUtils.isOnlySymbols(s)) return s;
@@ -35,7 +34,7 @@ public class TranslateHelper {
         };
     }
 
-    public static Function<String, CompletableFuture<String>> getDefaultAsyncTranslateStrategy(Config config, BatchTranslatorProcessor processor) {
+    static Function<String, CompletableFuture<String>> getDefaultAsyncTranslateStrategy(Config config, BatchTranslatorProcessor processor) {
         return s -> {
             if (LanguageUtils.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return CompletableFuture.completedFuture(s);
             if (LanguageUtils.isOnlySymbols(s)) return CompletableFuture.completedFuture(s);
@@ -44,7 +43,7 @@ public class TranslateHelper {
         };
     }
 
-    public static <T> String getReplacedCommand(String original, StringRange range, T result) {
+    static <T> String getReplacedCommand(String original, StringRange range, T result) {
         String before = original.substring(0, range.getStart());
         String after = original.substring(range.getEnd());
         String middle = Stringer.toStringFrom(result);

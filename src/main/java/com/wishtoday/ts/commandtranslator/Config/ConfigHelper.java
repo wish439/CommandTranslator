@@ -4,24 +4,10 @@ import com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Annotation.Ran
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public final class ConfigHelper {
     private ConfigHelper() {}
-
-    public static boolean isSimpleType(Class<?> type) {
-        return type.isPrimitive()
-                || type == String.class
-                || Number.class.isAssignableFrom(type)
-                || type == Boolean.class
-                || type == Integer.class
-                || type == Long.class
-                || type == Double.class
-                || type == Float.class
-                || type == Short.class
-                || type == Byte.class
-                || type == Character.class
-                || List.class.isAssignableFrom(type);
-    }
 
     public static Number clampNumber(Number value, Range range, Class<?> type) {
         if (type == int.class || type == Integer.class) {
@@ -42,6 +28,4 @@ public final class ConfigHelper {
         }
         return value;
     }
-
-
 }

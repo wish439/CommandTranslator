@@ -13,6 +13,7 @@ public class ContainerHelper {
         }
         return list;
     }
+    //Why not deal with superclasses? Because I never use stupid extends classes.
     static List<Class<?>> getInterfaces(Class<?> c) {
         return getInterfaces(c, Lists.newArrayList())
                 .stream().distinct().collect(Collectors.toList());

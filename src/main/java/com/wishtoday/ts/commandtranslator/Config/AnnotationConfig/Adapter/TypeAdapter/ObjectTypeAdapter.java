@@ -3,6 +3,7 @@ package com.wishtoday.ts.commandtranslator.Config.AnnotationConfig.Adapter.TypeA
 import com.wishtoday.ts.commandtranslator.Config.ConfigHelper;
 import com.wishtoday.ts.commandtranslator.Data.Configs.ConfigFieldInfo;
 import com.wishtoday.ts.commandtranslator.Data.Configs.ProcessingContext;
+import com.wishtoday.ts.commandtranslator.Util.TypeUtils;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -13,7 +14,7 @@ public class ObjectTypeAdapter implements FieldTypeAdapter<Object> {
     @Override
     public boolean shouldApply(ProcessingContext context, ConfigFieldInfo<?> field) {
         Class<?> type = field.field().getType();
-        return !ConfigHelper.isSimpleType(type)
+        return !TypeUtils.isSimpleType(type)
                 && !type.isEnum()
                 && !Collection.class.isAssignableFrom(type)
                 && !Map.class.isAssignableFrom(type);

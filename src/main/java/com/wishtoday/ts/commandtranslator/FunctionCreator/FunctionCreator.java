@@ -44,7 +44,7 @@ public class FunctionCreator {
         int processors = Math.min(functions.size(), Runtime.getRuntime().availableProcessors());
         List<List<ExpandedMacro<ServerCommandSource>>> partition = Lists.partition(functions, processors);
         try (ExecutorService executor = Executors.newFixedThreadPool(processors)) {
-            AtomicBoolean ref = new AtomicBoolean(false);
+            AtomicBoolean ref = new AtomicBoolean(true);
             CompletableFuture<Void> metaFuture = CompletableFuture.runAsync(() -> {
                 Path mcMetaPath = rootDirectoryPath.resolve("pack.mcmeta");
                 CreatorHelper.createFileAndWrite(mcMetaPath, ModResourcePackUtil.serializeMetadata(dataPack.packFormat, dataPack.description));

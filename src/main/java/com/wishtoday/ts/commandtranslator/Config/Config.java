@@ -8,12 +8,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 
 //TODO: switch to BuilderConfig system.
 @Setter
 @Getter
-public class Config implements MultiLanguageConfig {
+public class Config implements MultiLanguageConfig, ValuableConfig {
     private static Config instance;
 
     @TranslatableComment(value = {"""
@@ -240,6 +241,11 @@ public class Config implements MultiLanguageConfig {
     @Override
     public String getCurrentLanguage() {
         return this.configLang;
+    }
+
+    @Override
+    public <T> Optional<T> getConfigValue(String key, Class<T> type) {
+        return Optional.empty();
     }
 
     @Getter

@@ -31,11 +31,19 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 }
 tasks.register('generatePatch', Exec) {
     description = 'Generate .patch file from the latest git commit'
     workingDir = project.projectDir
     commandLine 'git', 'format-patch', '-1', 'HEAD', '-o', 'patches'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 processResources {

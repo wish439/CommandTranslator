@@ -101,6 +101,7 @@ public class Commandtranslator implements ModInitializer {
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> runnable.run());
         this.registerEvents();
+        this.registerCommands();
     }
 
     private <T> ConfigLoaderBuilder.AnnotationConfigLoaderStage<T> registerAnnotationAdapters(ConfigLoaderBuilder.AnnotationConfigLoaderStage<T> stage) {
