@@ -86,6 +86,7 @@ public class Commandtranslator implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             service.scheduleWithFixedDelay(runnable, 30, 60, TimeUnit.SECONDS);
             service2.shutdown();
+            System.out.println("shutdown BatchTranslatorProcessor");
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> runnable.run());
         this.registerEvents();

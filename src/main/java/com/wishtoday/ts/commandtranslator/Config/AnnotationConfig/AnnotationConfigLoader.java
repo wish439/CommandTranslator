@@ -80,7 +80,7 @@ public class AnnotationConfigLoader<T> implements IConfigLoader<T> {
         OUTSIDE:
         for (Field field : list) {
 
-            field.trySetAccessible();
+            if (!field.trySetAccessible()) continue;
 
             String name = getName(field);
 

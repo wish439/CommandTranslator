@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class BatchTranslatorProcessor implements FunctionProcessor<String, CompletableFuture<String>>{
     private final int batchSize;
@@ -49,9 +50,10 @@ public class BatchTranslatorProcessor implements FunctionProcessor<String, Compl
         if (existing != null) {
             return existing;
         }
-        if (queue.isEmpty()) {
+        /*if (queue.isEmpty()) {
             this.currentTime = System.currentTimeMillis();
-        }
+        }*/
+        this.currentTime = System.currentTimeMillis();
         queue.add(new Task(task, future));
         map.put(task, future);
         return future;
@@ -104,7 +106,7 @@ public class BatchTranslatorProcessor implements FunctionProcessor<String, Compl
             task.future.complete(s);
             map.remove(task.string);
         }
-        this.currentTime = -1;
+        if (this.queue.isEmpty()) this.currentTime = -1;
         Commandtranslator.LOGGER.info("This translator has been processed");
     }
 

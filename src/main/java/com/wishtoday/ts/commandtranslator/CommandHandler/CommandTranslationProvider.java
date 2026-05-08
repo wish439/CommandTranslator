@@ -9,7 +9,7 @@ import com.mojang.brigadier.tree.CommandNode;
 import com.wishtoday.ts.commandtranslator.Cache.CacheCheckResult;
 import com.wishtoday.ts.commandtranslator.Cache.CacheService;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
-import com.wishtoday.ts.commandtranslator.Config.ApplicationConfig;
+import com.wishtoday.ts.commandtranslator.Config.CopyToBuilderConfig;
 import com.wishtoday.ts.commandtranslator.Data.TextNodeTranslatorStorage;
 import com.wishtoday.ts.commandtranslator.Data.TranslateResults;
 import com.wishtoday.ts.commandtranslator.CommandHandler.Helper.BooleanCommandChecker;
@@ -24,15 +24,14 @@ import net.minecraft.server.command.ServerCommandSource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 public class CommandTranslationProvider {
     private final BatchTranslatorProcessor processor;
     private final TextCommandManager textCommandManager;
     private final CacheService cacheService;
-    private final ApplicationConfig config;
+    private final CopyToBuilderConfig config;
     @CreateConstruction
-    public CommandTranslationProvider(BatchTranslatorProcessor processor, TextCommandManager textCommandManager, CacheService cacheService, ApplicationConfig config) {
+    public CommandTranslationProvider(BatchTranslatorProcessor processor, TextCommandManager textCommandManager, CacheService cacheService, CopyToBuilderConfig config) {
         this.processor = processor;
         this.textCommandManager = textCommandManager;
         this.cacheService = cacheService;
@@ -68,8 +67,9 @@ public class CommandTranslationProvider {
         TextNodeTranslatorStorage<?> storage = textCommandManager.getCommand(headNode.getName());
 
         if (storage == null) return CompletableFuture.completedFuture(string);
-        Function<String, CompletableFuture<String>> listener = s -> CompletableFuture.completedFuture("HelloWorld");
-        CompletableFuture<? extends TranslateResults<?>> translated = storage.translateAsync(context, listener);
+        //Function<String, CompletableFuture<String>> listener = s -> CompletableFuture.completedFuture("HelloWorld");
+        //CompletableFuture<? extends TranslateResults<?>> translated = storage.translateAsync(context, listener);
+        CompletableFuture<? extends TranslateResults<?>> translated = storage.translateAsync(context, TranslateHelper.getDefaultAsyncTranslateStrategy(config, processor));
         ParsedArgument<ServerCommandSource, ?> argument = context.getArguments().get(storage.argumentName());
         if (argument == null) {
             return CompletableFuture.completedFuture(string);
@@ -82,9 +82,9 @@ public class CommandTranslationProvider {
             String s = TranslateHelper.getReplacedCommand(string, range, result.getResult());
             if (string.equals(s)) return string;
 
-
             cacheService.put(string, s);
 
+            System.out.println("Called AAABBBCCC");
             return s;
         });
     }

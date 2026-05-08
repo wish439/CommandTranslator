@@ -63,7 +63,7 @@ public class BuilderConfigLoader<T> implements IConfigLoader<T> {
         List<Field> list = fields.get(aClass);
 
         for (Field field : list) {
-            field.trySetAccessible();
+            if (!field.trySetAccessible()) continue;
 
             Object o = field.get(obj);
 

@@ -43,7 +43,8 @@ public class FunctionTranslationProvider {
         FunctionBuilder<ServerCommandSource> functionBuilder = null;
         try {
             functionBuilder = (FunctionBuilder<ServerCommandSource>) FunctionBuilder.class.getDeclaredConstructor().newInstance();
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                 NoSuchMethodException e) {
             throw new IllegalArgumentException("CreateAsync Failed, Can't create FunctionBuilder");
         }
 
