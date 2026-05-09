@@ -48,7 +48,6 @@ public class JsonSaver implements DataSaver {
         } catch (IOException e) {
             Commandtranslator.LOGGER.error("JsonSaver throw{}", e.getMessage());
         }
-
     }
 
     @Nullable

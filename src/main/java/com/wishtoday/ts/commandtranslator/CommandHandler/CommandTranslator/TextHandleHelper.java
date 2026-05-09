@@ -1,6 +1,7 @@
 package com.wishtoday.ts.commandtranslator.CommandHandler.CommandTranslator;
 
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
+import com.wishtoday.ts.commandtranslator.Helper.Stringer.Stringer;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.PlainTextContent;
 import net.minecraft.text.Style;
@@ -63,7 +64,9 @@ public class TextHandleHelper {
             @NotNull List<Text> texts,
             Function<String, CompletableFuture<String>> function
     ) {
-        List<CompletableFuture<Text>> futures = texts.stream().distinct()
+        System.out.println("handleAllStringInTextAsync, " + texts.size());
+        List<CompletableFuture<Text>> futures = texts.stream()
+                //.distinct()
                 //.filter(text1 -> text1.getContent() instanceof PlainTextContent)
                 .map(text1 -> {
                     if (!(text1.getContent() instanceof PlainTextContent content)) {
@@ -91,9 +94,16 @@ public class TextHandleHelper {
         return CompletableFuture
                 .allOf(futures.toArray(new CompletableFuture[0]))
                 .thenApply(v ->
-                        futures.stream()
-                                .map(CompletableFuture::join)
-                                .toList()
+                        {
+                            futures.forEach(future -> {
+                                Text join = future.join();
+                                String s = Stringer.toStringFrom(join);
+                                System.out.println("handleAllStringInTextAsync Text:" + s);
+                            });
+                            return futures.stream()
+                                    .map(CompletableFuture::join)
+                                    .toList();
+                        }
                 );
     }
 

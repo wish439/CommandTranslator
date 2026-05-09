@@ -9,7 +9,7 @@ public class TextStringable implements Stringable<MutableText> {
 
     @Override
     public String stringValue(MutableText value) {
-        return Text.Serialization.toJsonString(value ,DynamicRegistryManager.EMPTY);
+        return Text.Serialization.toJsonString(value, DynamicRegistryManager.EMPTY);
     }
 
     @Override
