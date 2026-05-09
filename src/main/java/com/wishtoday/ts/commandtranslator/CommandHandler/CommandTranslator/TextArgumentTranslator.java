@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.Helper.CommandTranslator;
+package com.wishtoday.ts.commandtranslator.CommandHandler.CommandTranslator;
 
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.context.StringRange;
@@ -13,9 +13,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-import static com.wishtoday.ts.commandtranslator.Helper.CommandTranslator.TextHandleHelper.*;
+import static com.wishtoday.ts.commandtranslator.CommandHandler.CommandTranslator.TextHandleHelper.*;
 
 public class TextArgumentTranslator implements ArgumentTranslator<Text> {
 
@@ -29,10 +30,9 @@ public class TextArgumentTranslator implements ArgumentTranslator<Text> {
         if (!(text.getContent() instanceof PlainTextContent content)) return null;
         String plainString = content.string();
         List<Text> texts = getAllSibLingsText(text, Lists.newArrayList());
-        String appliedPlain = o2nFunction.apply(plainString);
         List<Text> handled = handleAllStringInText(texts, o2nFunction);
 
-        return getTextTranslateResults(text, range, plainString, texts, appliedPlain, handled, original, translated);
+        return getTextTranslateResults(text, range, plainString, handled);
     }
 
     @Override
@@ -66,14 +66,15 @@ public class TextArgumentTranslator implements ArgumentTranslator<Text> {
     ) {
         String plain = content.string();
         List<Text> siblings = getAllSibLingsText(text, Collections.synchronizedList(new ArrayList<>()));
-        CompletableFuture<String> mainFuture = function.apply(plain);
+        CompletableFuture<String> mainFuture = function.apply(plain)
+                .orTimeout(240, TimeUnit.SECONDS)
+                .exceptionally(ex -> {
+                    Commandtranslator.LOGGER.warn("Translation timed out for text: {}", plain);
+                    return plain;
+                });
         CompletableFuture<List<Text>> siblingsFuture =
                 handleAllStringInTextAsync(siblings, function);
-        return mainFuture.thenCombine(siblingsFuture, (mainTranslated, handled) -> {
-            List<String> original = new ArrayList<>();
-            List<String> translated = new ArrayList<>();
-            return getTextTranslateResults(text, range, plain, siblings, mainTranslated, handled, original, translated);
-        });
+        return mainFuture.thenCombine(siblingsFuture, (mainTranslated, handled) -> getTextTranslateResults(text, range, plain, handled));
     }
 
     private @NotNull CompletableFuture<TranslateResults<Text>> translateAsyncNotMain(
@@ -84,37 +85,14 @@ public class TextArgumentTranslator implements ArgumentTranslator<Text> {
         List<Text> siblings = getAllSibLingsText(text, Collections.synchronizedList(new ArrayList<>()));
         CompletableFuture<List<Text>> siblingsFuture =
                 handleAllStringInTextAsync(siblings, function);
-        return siblingsFuture.thenApply(handled -> {
-            List<String> original = new ArrayList<>();
-            List<String> translated = new ArrayList<>();
-            return getTextTranslateResults(text, range, null, siblings, null, handled, original, translated);
-        });
+        return siblingsFuture.thenApply(handled -> getTextTranslateResults(text, range, null, handled));
     }
 
     @NotNull
-    private TranslateResults<Text> getTextTranslateResults(Text text, StringRange range, @Nullable String plain, List<Text> siblings, @Nullable String mainTranslated, List<Text> handled, List<String> original, List<String> translated) {
-        if (plain != null) {
-            original.add(formatStringToReplaceFormat(plain));
-        }
-        original.addAll(getStringsFromTexts(siblings).stream()
-                .map(this::formatStringToReplaceFormat).toList());
-
-        if (mainTranslated != null) {
-            translated.add(formatStringToReplaceFormat(mainTranslated));
-        }
-        translated.addAll(getStringsFromTexts(handled).stream()
-                .map(this::formatStringToReplaceFormat).toList());
-
+    private TranslateResults<Text> getTextTranslateResults(Text text, StringRange range, @Nullable String mainTranslated, List<Text> handled) {
         return new TranslateResults<>(
                 buildNewText(mainTranslated, text.getStyle(), handled),
-                original,
-                translated,
                 range
         );
-    }
-
-    @NotNull
-    private String formatStringToReplaceFormat(@NotNull String s) {
-        return String.format("\"%s\"", s.replace("\"", "\\\""));
     }
 }

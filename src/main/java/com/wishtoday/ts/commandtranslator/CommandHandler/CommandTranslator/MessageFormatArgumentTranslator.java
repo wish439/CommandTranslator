@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.Helper.CommandTranslator;
+package com.wishtoday.ts.commandtranslator.CommandHandler.CommandTranslator;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.StringRange;
@@ -47,7 +47,7 @@ public class MessageFormatArgumentTranslator implements ArgumentTranslator<Messa
         if (format1 == null) {
             return null;
         }
-        return new TranslateResults<>(format1, original, translated, range);
+        return new TranslateResults<>(format1, range);
     }
 
     @Override
@@ -76,7 +76,7 @@ public class MessageFormatArgumentTranslator implements ArgumentTranslator<Messa
                 Commandtranslator.LOGGER.warn("MessageFormatArgumentTranslator.translate will return null");
                 return null;
             }
-            return new TranslateResults<>(format1, original, translated, range);
+            return new TranslateResults<>(format1, range);
         });
     }
 }

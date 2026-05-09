@@ -4,6 +4,7 @@
 /build/classes/java/main/
 /patches/
 /logs/
+threads_report.txt
 
 run
 build

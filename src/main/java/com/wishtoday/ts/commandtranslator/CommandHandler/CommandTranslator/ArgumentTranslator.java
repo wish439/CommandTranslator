@@ -1,4 +1,4 @@
-package com.wishtoday.ts.commandtranslator.Helper.CommandTranslator;
+package com.wishtoday.ts.commandtranslator.CommandHandler.CommandTranslator;
 
 import com.mojang.brigadier.context.StringRange;
 import com.wishtoday.ts.commandtranslator.Data.TranslateResults;

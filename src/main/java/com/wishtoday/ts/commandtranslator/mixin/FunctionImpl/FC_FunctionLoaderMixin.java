@@ -49,9 +49,10 @@ public abstract class FC_FunctionLoaderMixin {
         List<String> list = readLines(entry.getValue());
         if (list == null) return original.call(supplier, executor);
         CompletableFuture<CommandFunction<ServerCommandSource>> future = CompletableFuture.supplyAsync(
-                        () -> translationProvider.create(identifier, commandDispatcher, source, list, executor),
-                        executor
-                ).thenCompose(f -> f)
+                        () -> translationProvider.create(identifier, commandDispatcher, source, list, executor)
+                        , executor
+                )
+                .thenCompose(f -> f)
                 .exceptionallyCompose(t -> {
                     Commandtranslator.LOGGER.error("threw ", t);
                     return original.call(supplier, executor);

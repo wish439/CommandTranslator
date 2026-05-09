@@ -1,5 +1,6 @@
-package com.wishtoday.ts.commandtranslator.Helper.CommandTranslator;
+package com.wishtoday.ts.commandtranslator.CommandHandler.CommandTranslator;
 
+import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.PlainTextContent;
 import net.minecraft.text.Style;
@@ -9,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -70,7 +72,13 @@ public class TextHandleHelper {
 
                     String s = content.string();
 
-                    return function.apply(s).thenApply(translated -> {
+                    return function.apply(s)
+                            .orTimeout(240, TimeUnit.SECONDS)
+                            .exceptionally(ex -> {
+                                Commandtranslator.LOGGER.warn("Translation timed out for text: {}", s);
+                                return s;
+                            })
+                            .thenApply(translated -> {
                         MutableText mutableText = MutableText
                                 .of(PlainTextContent.of(translated))
                                 .setStyle(text1.getStyle());

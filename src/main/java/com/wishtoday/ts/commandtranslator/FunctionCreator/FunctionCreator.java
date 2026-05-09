@@ -37,7 +37,7 @@ public class FunctionCreator {
         CreatorHelper.deleteDirectories(rootDirectoryPath);
         path = rootDirectoryPath.resolve("data");
         List<ExpandedMacro<ServerCommandSource>> functions = dataPack.functions;
-        Commandtranslator.LOGGER.info("Creating Function DataPack {} to {}", functions.toString(), rootDirectoryPath);
+        //Commandtranslator.LOGGER.info("Creating Function DataPack {} to {}", functions.toString(), rootDirectoryPath);
         if (functions.isEmpty()) {
             return false;
         }

@@ -34,8 +34,10 @@ public class TranslateHelper {
 
     static Function<String, CompletableFuture<String>> getDefaultAsyncTranslateStrategy(CopyToBuilderConfig config, BatchTranslatorProcessor processor) {
         return s -> {
+            System.out.println("getDefaultAsyncTranslateStrategy received '" + s + "'");
             if (LanguageHelper.isChineseSentence(s, config.getChineseSentenceJudgmentRange())) return CompletableFuture.completedFuture(s);
             if (LanguageHelper.isOnlySymbols(s)) return CompletableFuture.completedFuture(s);
+            System.out.println("getDefaultAsyncTranslateStrategy success into translate '" + s + "'");
             //if (s.isBlank()) return CompletableFuture.completedFuture(s);
             return processor.submit(s);
         };

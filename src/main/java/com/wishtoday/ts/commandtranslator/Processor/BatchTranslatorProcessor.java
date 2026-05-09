@@ -29,6 +29,8 @@ public class BatchTranslatorProcessor implements FunctionProcessor<String, Compl
 
     private final AtomicBoolean processing = new AtomicBoolean(false);
 
+    private final AtomicInteger counter = new AtomicInteger(0);
+
     @CreateConstruction
     public BatchTranslatorProcessor(@ConfigValue("batchSize") int batchSize
             , @ConfigValue("timeout") int timeout
@@ -55,18 +57,26 @@ public class BatchTranslatorProcessor implements FunctionProcessor<String, Compl
         }*/
         this.currentTime = System.currentTimeMillis();
         queue.add(new Task(task, future));
-        map.put(task, future);
+        //map.put(task, future);
         return future;
     }
 
     @Override
     public void tick() {
+        if (counter.incrementAndGet() > 300) {
+            counter.set(0);
+            System.out.println(System.currentTimeMillis());
+            System.out.println(currentTime);
+            System.out.println(timeout);
+            System.out.println(queue.size());
+        }
         if (queue.isEmpty()) {
             return;
         }
         if (queue.size() >= batchSize) {
             processQueue();
         }
+
         if (currentTime < 0) return;
         if (System.currentTimeMillis() - currentTime > timeout) {
             processQueue();
@@ -91,7 +101,7 @@ public class BatchTranslatorProcessor implements FunctionProcessor<String, Compl
         for (int i = 0; i < batchSize; i++) {
             Task task = queue.poll();
             if (task == null) {
-                continue;
+                break;
             }
             tasks.add(task);
         }

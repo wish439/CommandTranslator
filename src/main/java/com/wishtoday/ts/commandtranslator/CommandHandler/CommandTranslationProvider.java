@@ -84,7 +84,6 @@ public class CommandTranslationProvider {
 
             cacheService.put(string, s);
 
-            System.out.println("Called AAABBBCCC");
             return s;
         });
     }

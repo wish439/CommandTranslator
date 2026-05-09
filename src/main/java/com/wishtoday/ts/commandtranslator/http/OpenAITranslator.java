@@ -5,11 +5,13 @@ import com.google.gson.reflect.TypeToken;
 import com.wishtoday.ts.commandtranslator.Commandtranslator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.ToString;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class OpenAITranslator implements ITranslator {
@@ -72,6 +74,8 @@ public class OpenAITranslator implements ITranslator {
 
             ResultInfo.Result result = info.choices[0];
 
+            System.out.println(info);
+
             translation = result.message.content;
 
         } catch (IOException e) {
@@ -90,9 +94,10 @@ public class OpenAITranslator implements ITranslator {
     @Override
     public List<String> translate(List<String> strings) {
         String json = Constants.GSON.toJson(strings);
-        String translation = this.translation(json);
         Commandtranslator.LOGGER.info("submit to translator:{}", json);
-        return Constants.GSON.fromJson(translation, new TypeToken<>() {});
+        String translation = this.translation(json);
+        Commandtranslator.LOGGER.info("receive the translation:{}", translation);
+        return Constants.GSON.fromJson(translation, new TypeToken<List<String>>() {}.getType());
     }
 
     @AllArgsConstructor
@@ -102,9 +107,11 @@ public class OpenAITranslator implements ITranslator {
         private boolean stream;
     }
 
+    @ToString
     private static class ResultInfo {
         private Result[] choices;
 
+        @ToString
         private static class Result {
             private MessageInfo message;
         }
